@@ -47,7 +47,7 @@ const ChangeYearLevelDialog = ({ open, onClose, formData, onSuccess }: ChangeYea
     
     setLoading(true);
     try {
-      const { error } = await supabase.from('requests').insert({
+      const { error } = await supabase.from('requests').insert([{
         user_id: user.id,
         id_number: formData.idNumber,
         college: formData.college,
@@ -59,9 +59,9 @@ const ChangeYearLevelDialog = ({ open, onClose, formData, onSuccess }: ChangeYea
         email: formData.email,
         phone_number: formData.phoneNumber,
         facebook: formData.facebook || null,
-        request_type: 'change_year_level',
-        request_data: { currentYearLevel, reason },
-      });
+        request_type: 'change_year_level' as const,
+        request_data: JSON.parse(JSON.stringify({ currentYearLevel, reason })),
+      }]);
 
       if (error) throw error;
 

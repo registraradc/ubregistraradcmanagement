@@ -78,7 +78,7 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
     
     setLoading(true);
     try {
-      const { error } = await supabase.from('requests').insert({
+      const { error } = await supabase.from('requests').insert([{
         user_id: user.id,
         id_number: formData.idNumber,
         college: formData.college,
@@ -90,9 +90,9 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
         email: formData.email,
         phone_number: formData.phoneNumber,
         facebook: formData.facebook || null,
-        request_type: 'drop',
-        request_data: { courses },
-      });
+        request_type: 'drop' as const,
+        request_data: JSON.parse(JSON.stringify({ courses })),
+      }]);
 
       if (error) throw error;
 

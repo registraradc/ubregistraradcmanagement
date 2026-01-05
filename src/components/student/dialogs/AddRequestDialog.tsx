@@ -78,7 +78,7 @@ const AddRequestDialog = ({ open, onClose, formData, onSuccess }: AddRequestDial
     
     setLoading(true);
     try {
-      const { error } = await supabase.from('requests').insert({
+      const { error } = await supabase.from('requests').insert([{
         user_id: user.id,
         id_number: formData.idNumber,
         college: formData.college,
@@ -90,9 +90,9 @@ const AddRequestDialog = ({ open, onClose, formData, onSuccess }: AddRequestDial
         email: formData.email,
         phone_number: formData.phoneNumber,
         facebook: formData.facebook || null,
-        request_type: 'add',
-        request_data: { courses },
-      });
+        request_type: 'add' as const,
+        request_data: JSON.parse(JSON.stringify({ courses })),
+      }]);
 
       if (error) throw error;
 
