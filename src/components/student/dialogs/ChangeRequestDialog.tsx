@@ -106,7 +106,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
     
     setLoading(true);
     try {
-      const { error } = await supabase.from('requests').insert({
+      const { error } = await supabase.from('requests').insert([{
         user_id: user.id,
         id_number: formData.idNumber,
         college: formData.college,
@@ -118,9 +118,9 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
         email: formData.email,
         phone_number: formData.phoneNumber,
         facebook: formData.facebook || null,
-        request_type: 'change',
-        request_data: { oldCourses, newCourses },
-      });
+        request_type: 'change' as const,
+        request_data: JSON.parse(JSON.stringify({ oldCourses, newCourses })),
+      }]);
 
       if (error) throw error;
 
