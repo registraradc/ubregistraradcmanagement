@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import path from 'path';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
@@ -52,6 +53,16 @@ async function createSession(userId, expiresAt) {
       console.error('[auth-server] Failed to insert auth_session:', error);
       throw error;
     }
+  } else if (supabaseClient) {
+    const { error } = await supabaseClient.rpc('add_auth_session', {
+      p_user_id: userId,
+      p_token_hash: tokenHash,
+      p_expires_at: new Date(expiresAt).toISOString(),
+    });
+    if (error) {
+      console.error('[auth-server] RPC add_auth_session failed:', error);
+      throw error;
+    }
   } else {
     memStore.set(tokenHash, {
       userId,
@@ -70,6 +81,10 @@ async function getSessionByToken(token) {
     const { data } = await supabaseAdmin.from('auth_sessions').select('*').eq('token_hash', tokenHash).maybeSingle();
     return data || null;
   }
+  if (supabaseClient) {
+    const { data } = await supabaseClient.rpc('get_session_by_token', { p_token_hash: tokenHash });
+    return data?.[0] || null;
+  }
   const rec = memStore.get(tokenHash);
   if (!rec) return null;
   return {
@@ -86,6 +101,9 @@ async function revokeSessionByToken(token) {
   const tokenHash = hashToken(token);
   if (supabaseAdmin) {
     await supabaseAdmin.from('auth_sessions').update({ revoked: true }).eq('token_hash', tokenHash);
+  } else if (supabaseClient) {
+    const { error } = await supabaseClient.rpc('revoke_auth_session', { p_token_hash: tokenHash });
+    if (error) console.error('[auth-server] RPC revoke_auth_session failed:', error);
   } else {
     const rec = memStore.get(tokenHash);
     if (rec) {
@@ -116,6 +134,17 @@ async function rotateSession(token) {
       expires_at: new Date(newExpiry).toISOString(),
       revoked: false,
     });
+  } else if (supabaseClient) {
+    const { error } = await supabaseClient.rpc('rotate_auth_session', {
+      p_old_token_hash: tokenHash,
+      p_user_id: sess.user_id,
+      p_new_token_hash: newHash,
+      p_expires_at: new Date(newExpiry).toISOString(),
+    });
+    if (error) {
+      console.error('[auth-server] RPC rotate_auth_session failed:', error);
+      return null;
+    }
   } else {
     const prev = memStore.get(tokenHash);
     if (prev) {
@@ -136,6 +165,9 @@ async function rotateSession(token) {
 async function revokeAllForUser(userId) {
   if (supabaseAdmin) {
     await supabaseAdmin.from('auth_sessions').update({ revoked: true }).eq('user_id', userId);
+  } else if (supabaseClient) {
+    const { error } = await supabaseClient.rpc('revoke_all_sessions_for_user', { p_user_id: userId });
+    if (error) console.error('[auth-server] RPC revoke_all_sessions_for_user failed:', error);
   } else {
     for (const [k, v] of memStore.entries()) {
       if (v.userId === userId) {
@@ -242,6 +274,12 @@ app.get('/api/health', (req, res) => {
     },
     corsOrigin: CLIENT_ORIGIN,
   });
+});
+
+// serve built frontend to ensure same-origin for cookies
+app.use(express.static('dist'));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'dist', 'index.html'));
 });
 
 app.listen(PORT, () => {
