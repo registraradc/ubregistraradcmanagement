@@ -15,7 +15,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signUp: (email: string, password: string, role: 'student' | 'staff') => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000';
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -66,6 +67,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(p);
           setLoading(false);
         });
+        supabase.auth.refreshSession().then(({ data: refreshed }) => {
+          if (refreshed.session) {
+            setSession(refreshed.session);
+          }
+        });
+        fetch(`${API_BASE}/api/session/refresh`, { credentials: 'include' }).catch(() => {});
       } else {
         setLoading(false);
       }
@@ -106,17 +113,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: null };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
+    if (rememberMe) {
+      try {
+        await fetch(`${API_BASE}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password, rememberMe: true }),
+        });
+      } catch {}
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
+    if (!error) {
+      if (!rememberMe) {
+        const keys: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k) keys.push(k);
+        }
+        keys.forEach((k) => {
+          if ((k.startsWith('sb-') && k.endsWith('-auth-token')) || k.includes('supabase') && k.includes('auth')) {
+            localStorage.removeItem(k);
+          }
+        });
+        sessionStorage.setItem('session_ephemeral', '1');
+      }
+    }
     return { error };
   };
 
   const signOut = async () => {
+    try {
+      await fetch(`${API_BASE}/api/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {}
     await supabase.auth.signOut();
     setProfile(null);
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k) keys.push(k);
+    }
+    keys.forEach((k) => {
+      if ((k.startsWith('sb-') && k.endsWith('-auth-token')) || k.includes('supabase') && k.includes('auth')) {
+        localStorage.removeItem(k);
+      }
+    });
+    sessionStorage.removeItem('session_ephemeral');
   };
 
   return (
