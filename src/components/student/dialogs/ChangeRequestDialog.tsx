@@ -216,7 +216,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
                   <div key={index} className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground w-8">{index + 1}.</span>
                     <Input
-                      placeholder="e.g., CS101"
+                      placeholder="PATHFit 1"
                       value={course.courseCode}
                       onChange={(e) => updateOldCourse(index, e.target.value)}
                     />
@@ -248,7 +248,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
                         <div className="space-y-1">
                           <Label className="text-xs">New Course Code</Label>
                           <Input
-                            placeholder="e.g., CS102"
+                            placeholder="Lit 1N"
                             value={course.courseCode}
                             onChange={(e) => updateNewCourse(index, 'courseCode', e.target.value)}
                           />
@@ -256,7 +256,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
                         <div className="space-y-1">
                           <Label className="text-xs">Descriptive Title</Label>
                           <Input
-                            placeholder="e.g., Advanced Programming"
+                            placeholder="Philippine Literature"
                             value={course.descriptiveTitle}
                             onChange={(e) => updateNewCourse(index, 'descriptiveTitle', e.target.value)}
                           />
@@ -264,7 +264,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
                         <div className="space-y-1">
                           <Label className="text-xs">Section Code</Label>
                           <Input
-                            placeholder="e.g., A1"
+                            placeholder="e.g., T241"
                             value={course.sectionCode}
                             onChange={(e) => updateNewCourse(index, 'sectionCode', e.target.value)}
                           />
@@ -272,7 +272,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
                         <div className="space-y-1">
                           <Label className="text-xs">Time</Label>
                           <Input
-                            placeholder="e.g., 8:00-10:00"
+                            placeholder="e.g., 7:30-9:00 AM"
                             value={course.time}
                             onChange={(e) => updateNewCourse(index, 'time', e.target.value)}
                           />
@@ -280,7 +280,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
                         <div className="space-y-1 sm:col-span-2">
                           <Label className="text-xs">Day</Label>
                           <Input
-                            placeholder="e.g., MWF"
+                            placeholder="e.g., MWF/TTH"
                             value={course.day}
                             onChange={(e) => updateNewCourse(index, 'day', e.target.value)}
                           />

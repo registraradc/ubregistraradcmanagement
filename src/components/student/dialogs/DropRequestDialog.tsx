@@ -186,7 +186,7 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
                         <div className="space-y-1">
                           <Label className="text-xs">Course Code</Label>
                           <Input
-                            placeholder="e.g., CS101"
+                            placeholder="e.g., CWorld"
                             value={course.courseCode}
                             onChange={(e) => updateCourse(index, 'courseCode', e.target.value)}
                           />
@@ -194,7 +194,7 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
                         <div className="space-y-1">
                           <Label className="text-xs">Descriptive Title</Label>
                           <Input
-                            placeholder="e.g., Intro to Programming"
+                            placeholder="e.g., The Contemporary World"
                             value={course.descriptiveTitle}
                             onChange={(e) => updateCourse(index, 'descriptiveTitle', e.target.value)}
                           />
@@ -202,7 +202,7 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
                         <div className="space-y-1">
                           <Label className="text-xs">Section Code</Label>
                           <Input
-                            placeholder="e.g., A1"
+                            placeholder="e.g., T241"
                             value={course.sectionCode}
                             onChange={(e) => updateCourse(index, 'sectionCode', e.target.value)}
                           />
@@ -210,7 +210,7 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
                         <div className="space-y-1">
                           <Label className="text-xs">Time</Label>
                           <Input
-                            placeholder="e.g., 8:00-10:00"
+                            placeholder="e.g., 7:30-9:00 AM"
                             value={course.time}
                             onChange={(e) => updateCourse(index, 'time', e.target.value)}
                           />
@@ -218,7 +218,7 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
                         <div className="space-y-1 sm:col-span-2">
                           <Label className="text-xs">Day</Label>
                           <Input
-                            placeholder="e.g., MWF"
+                            placeholder="e.g., MWF/TTH"
                             value={course.day}
                             onChange={(e) => updateCourse(index, 'day', e.target.value)}
                           />

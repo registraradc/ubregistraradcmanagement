@@ -128,7 +128,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
               <Label htmlFor="idNumber">ID Number *</Label>
               <Input
                 id="idNumber"
-                placeholder="e.g., 2024-00001"
+                placeholder="e.g., 26-0123-456"
                 value={formData.idNumber}
                 onChange={(e) => handleInputChange('idNumber', e.target.value)}
                 className="input-focus"
@@ -220,7 +220,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
               <Input
                 id="email"
                 type="email"
-                placeholder="juan@email.com"
+                placeholder="jsdelacruz@universityofbohol.edu.ph"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="input-focus"

@@ -8,11 +8,11 @@ const RoleSelect = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FC] flex flex-col font-sans">
-      <div className="flex-grow flex flex-col items-center justify-center p-4">
+      <div className="flex-grow flex flex-col items-center justify-center px-4 pb-4 pt-12 md:pt-16 lg:pt-20">
         <div className="w-full max-w-5xl animate-fade-in">
           <div className="text-center mb-12 animate-slide-up">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-none tracking-tight text-slate-900 mb-2">
-              Academic Request
+              ADC Request
             </h1>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-none tracking-tight text-blue-600 mb-6">
               Management

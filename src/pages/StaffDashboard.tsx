@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RequestQueue from '@/components/staff/RequestQueue';
 import RequestHistory from '@/components/staff/RequestHistory';
@@ -10,6 +11,7 @@ import { LogOut, ClipboardList, History, Users, Loader2 } from 'lucide-react';
 const StaffDashboard = () => {
   const navigate = useNavigate();
   const { user, profile, loading, signOut } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -20,7 +22,11 @@ const StaffDashboard = () => {
     }
   }, [user, profile, loading, navigate]);
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
     await signOut();
     navigate('/');
   };
@@ -42,13 +48,13 @@ const StaffDashboard = () => {
               <Users className="w-5 h-5 text-slate-600" />
             </div>
             <div>
-              <h1 className="font-semibold text-sm md:text-base">ADC System</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Registrar Staff Portal</p>
+              <h1 className="font-semibold text-sm md:text-base">Staff Dashboard</h1>
+              <p className="text-xs text-muted-foreground">{user?.email ?? profile?.email ?? ''}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
+          <Button variant="ghost" size="sm" onClick={handleLogoutClick} className="hover:text-destructive hover:bg-destructive/10">
             <LogOut className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">Logout</span>
+            <span className="hidden md:inline">Sign Out</span>
           </Button>
         </div>
       </header>
@@ -75,6 +81,23 @@ const StaffDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign Out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to sign out?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Yes, Sign Out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="w-full bg-white/90 border-t border-slate-200 backdrop-blur py-2 mt-auto">
         <div className="container mx-auto px-4 flex items-center justify-center">

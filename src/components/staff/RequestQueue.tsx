@@ -344,7 +344,7 @@ const RequestQueue = () => {
                       <span className="font-medium text-sm md:text-base truncate">
                         {request.last_name}, {request.first_name}
                       </span>
-                      <Badge className={`${getStatusClass(request.status)} text-xs`}>
+                      <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
                         <span className="flex items-center gap-1">
                           {getStatusIcon(request.status)}
                           <span className="capitalize">{request.status}</span>
@@ -421,7 +421,7 @@ const RequestQueue = () => {
               <div className="border-t pt-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-muted-foreground">Status:</span>
-                  <Badge className={getStatusClass(selectedRequest.status)}>
+                  <Badge variant="outline" className={getStatusClass(selectedRequest.status)}>
                     <span className="flex items-center gap-1">
                       {getStatusIcon(selectedRequest.status)}
                       <span className="capitalize">{selectedRequest.status}</span>
