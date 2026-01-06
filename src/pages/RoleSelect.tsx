@@ -12,11 +12,10 @@ const RoleSelect = () => {
         <div className="w-full max-w-5xl animate-fade-in">
           <div className="text-center mb-12 animate-slide-up">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-none tracking-tight text-slate-900 mb-2">
-              University of Bohol <br />
-              ADC Request
+              UB Registrar
             </h1>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-none tracking-tight text-blue-600 mb-6">
-              Management
+              ADC Request Management
             </h1>
             <p className="text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed">
               Streamline your course adding, dropping, and changing requests with our efficient digital system.
