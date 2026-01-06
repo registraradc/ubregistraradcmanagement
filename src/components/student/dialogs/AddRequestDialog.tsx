@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -78,6 +78,26 @@ const AddRequestDialog = ({ open, onClose, formData, onSuccess }: AddRequestDial
     
     setLoading(true);
     try {
+      // Check if user already has a pending or processing request of this type
+      const { data: existingRequest } = await supabase
+        .from('requests')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .eq('request_type', 'add')
+        .in('status', ['pending', 'processing'])
+        .single();
+
+      if (existingRequest) {
+        toast({
+          title: 'Request Already Exists',
+          description: 'You already have a pending or processing Add request. Please wait for it to be completed.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        setShowConfirm(false);
+        return;
+      }
+
       const { error } = await supabase.from('requests').insert([{
         user_id: user.id,
         id_number: formData.idNumber,
@@ -105,9 +125,7 @@ const AddRequestDialog = ({ open, onClose, formData, onSuccess }: AddRequestDial
     } catch (error: any) {
       toast({
         title: 'Submission Failed',
-        description: error.message.includes('unique constraint') 
-          ? 'You already have a pending Add request. Please wait for it to be processed.' 
-          : error.message,
+        description: error.message,
         variant: 'destructive',
       });
     } finally {
@@ -159,64 +177,56 @@ const AddRequestDialog = ({ open, onClose, formData, onSuccess }: AddRequestDial
 
           {step === 2 && (
             <div className="py-4">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="min-w-[100px]">Course Code</TableHead>
-                      <TableHead className="min-w-[150px]">Descriptive Title</TableHead>
-                      <TableHead className="min-w-[100px]">Section Code</TableHead>
-                      <TableHead className="min-w-[100px]">Time</TableHead>
-                      <TableHead className="min-w-[80px]">Day</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {courses.map((course, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
+              <div className="space-y-4">
+                {courses.map((course, index) => (
+                  <Card key={index} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <p className="text-sm font-medium text-muted-foreground mb-3">Course {index + 1}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Course Code</Label>
                           <Input
                             placeholder="e.g., CS101"
                             value={course.courseCode}
                             onChange={(e) => updateCourse(index, 'courseCode', e.target.value)}
-                            className="min-w-[90px]"
                           />
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Descriptive Title</Label>
                           <Input
                             placeholder="e.g., Intro to Programming"
                             value={course.descriptiveTitle}
                             onChange={(e) => updateCourse(index, 'descriptiveTitle', e.target.value)}
-                            className="min-w-[140px]"
                           />
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Section Code</Label>
                           <Input
                             placeholder="e.g., A1"
                             value={course.sectionCode}
                             onChange={(e) => updateCourse(index, 'sectionCode', e.target.value)}
-                            className="min-w-[80px]"
                           />
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Time</Label>
                           <Input
                             placeholder="e.g., 8:00-10:00"
                             value={course.time}
                             onChange={(e) => updateCourse(index, 'time', e.target.value)}
-                            className="min-w-[90px]"
                           />
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label className="text-xs">Day</Label>
                           <Input
                             placeholder="e.g., MWF"
                             value={course.day}
                             onChange={(e) => updateCourse(index, 'day', e.target.value)}
-                            className="min-w-[70px]"
                           />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
               <DialogFooter className="mt-6 gap-2">
                 <Button variant="outline" onClick={() => setStep(1)}>Back</Button>

@@ -47,6 +47,26 @@ const ChangeYearLevelDialog = ({ open, onClose, formData, onSuccess }: ChangeYea
     
     setLoading(true);
     try {
+      // Check if user already has a pending or processing request of this type
+      const { data: existingRequest } = await supabase
+        .from('requests')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .eq('request_type', 'change_year_level')
+        .in('status', ['pending', 'processing'])
+        .single();
+
+      if (existingRequest) {
+        toast({
+          title: 'Request Already Exists',
+          description: 'You already have a pending or processing Change Year Level request. Please wait for it to be completed.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        setShowConfirm(false);
+        return;
+      }
+
       const { error } = await supabase.from('requests').insert([{
         user_id: user.id,
         id_number: formData.idNumber,
@@ -74,9 +94,7 @@ const ChangeYearLevelDialog = ({ open, onClose, formData, onSuccess }: ChangeYea
     } catch (error: any) {
       toast({
         title: 'Submission Failed',
-        description: error.message.includes('unique constraint') 
-          ? 'You already have a pending Change Year Level request. Please wait for it to be processed.' 
-          : error.message,
+        description: error.message,
         variant: 'destructive',
       });
     } finally {
