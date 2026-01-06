@@ -121,7 +121,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         });
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         fetch(`${window.location.origin}/api/session/refresh`, { credentials: 'include' }).catch(() => {});
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
       } else {
@@ -166,6 +169,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     if (rememberMe) {
       try {
         await fetch(`/api/login`, {
@@ -176,6 +180,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } catch {}
     }
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
     const { data, error } = await supabase.auth.signInWithPassword({
