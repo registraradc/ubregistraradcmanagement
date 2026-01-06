@@ -12,7 +12,7 @@ const RoleSelect = () => {
         <div className="w-full max-w-5xl animate-fade-in">
           <div className="text-center mb-12 animate-slide-up">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-none tracking-tight text-slate-900 mb-2">
-              ADC Request
+              University of Bohol ADC Request
             </h1>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-none tracking-tight text-blue-600 mb-6">
               Management
