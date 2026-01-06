@@ -21,6 +21,9 @@ app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
 
 const supabaseClient = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 const supabaseAdmin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : null;
+if (!supabaseAdmin) {
+  console.warn('[auth-server] SUPABASE_SERVICE_ROLE_KEY not set. Using in-memory session store; database persistence disabled.');
+}
 
 const memStore = new Map();
 
@@ -33,7 +36,7 @@ async function createSession(userId, expiresAt) {
   const tokenHash = hashToken(token);
   const now = new Date().toISOString();
   if (supabaseAdmin) {
-    await supabaseAdmin.from('auth_sessions').insert({
+    const { error } = await supabaseAdmin.from('auth_sessions').insert({
       user_id: userId,
       token_hash: tokenHash,
       created_at: now,
@@ -41,6 +44,10 @@ async function createSession(userId, expiresAt) {
       expires_at: new Date(expiresAt).toISOString(),
       revoked: false,
     });
+    if (error) {
+      console.error('[auth-server] Failed to insert auth_session:', error);
+      throw error;
+    }
   } else {
     memStore.set(tokenHash, {
       userId,
