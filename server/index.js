@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -23,6 +24,9 @@ const supabaseClient = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE
 const supabaseAdmin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : null;
 if (!supabaseAdmin) {
   console.warn('[auth-server] SUPABASE_SERVICE_ROLE_KEY not set. Using in-memory session store; database persistence disabled.');
+}
+if (!supabaseClient) {
+  console.warn('[auth-server] SUPABASE_URL/ANON key not set. Login verification disabled.');
 }
 
 const memStore = new Map();
@@ -159,6 +163,7 @@ app.post('/api/login', async (req, res) => {
       maxAge: COOKIE_MAX_AGE_SECONDS * 1000,
       path: '/',
     });
+    console.log('[auth-server] Created session for user', data.user.id, 'expires in seconds', COOKIE_MAX_AGE_SECONDS);
     return res.status(200).json({ ok: true });
   } catch {
     return res.status(500).json({ error: 'server_error' });
@@ -223,6 +228,20 @@ app.post('/api/revoke-all', async (req, res) => {
   } catch {
     return res.status(500).json({ error: 'server_error' });
   }
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    clientConfigured: !!supabaseClient,
+    adminConfigured: !!supabaseAdmin,
+    cookie: {
+      name: COOKIE_NAME,
+      secure: COOKIE_SECURE,
+      sameSite: COOKIE_SAMESITE,
+      maxAgeSeconds: COOKIE_MAX_AGE_SECONDS,
+    },
+    corsOrigin: CLIENT_ORIGIN,
+  });
 });
 
 app.listen(PORT, () => {
