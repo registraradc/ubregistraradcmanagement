@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setSession(refreshed.session);
           }
         });
-        fetch(`${API_BASE}/api/session/refresh`, { credentials: 'include' }).catch(() => {});
+        fetch(`${window.location.origin}/api/session/refresh`, { credentials: 'include' }).catch(() => {});
       } else {
         setLoading(false);
       }
@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
     if (rememberMe) {
       try {
-        await fetch(`${API_BASE}/api/login`, {
+        await fetch(`/api/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
