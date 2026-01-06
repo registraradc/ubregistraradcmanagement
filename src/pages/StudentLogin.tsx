@@ -110,7 +110,7 @@ const StudentLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FC] flex flex-col">
       <div className="p-4">
         <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" />
@@ -118,11 +118,11 @@ const StudentLogin = () => {
         </Link>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-grow flex items-center justify-center p-4">
         <Card className="w-full max-w-md animate-slide-up">
           <CardHeader className="text-center">
-            <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-              <GraduationCap className="w-7 h-7 text-primary" />
+            <div className="mx-auto w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
+              <GraduationCap className="w-7 h-7 text-blue-600" />
             </div>
             <CardTitle className="text-2xl">Student Portal</CardTitle>
             <CardDescription>Access your ADC request dashboard</CardDescription>
@@ -212,6 +212,20 @@ const StudentLogin = () => {
             </Tabs>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="w-full bg-white/90 border-t border-slate-200 backdrop-blur py-2 mt-auto">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <div className="inline-flex items-center gap-2 whitespace-nowrap text-slate-600 text-[clamp(10px,3vw,13px)]">
+            <span>Developed by</span>
+            <img
+              src="/ubytes/ubytesLogo.png"
+              alt="UBYTeS logo"
+              className="h-[clamp(14px,3.8vw,18px)] w-[clamp(14px,3.8vw,18px)] object-contain"
+            />
+            <span>UBYTeS - University of Bohol Young Thinkers Society</span>
+          </div>
+        </div>
       </div>
     </div>
   );

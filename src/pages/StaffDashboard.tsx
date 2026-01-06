@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RequestQueue from '@/components/staff/RequestQueue';
 import RequestHistory from '@/components/staff/RequestHistory';
-import { LogOut, ClipboardList, History, Briefcase, Loader2 } from 'lucide-react';
+import { LogOut, ClipboardList, History, Users, Loader2 } from 'lucide-react';
 
 const StaffDashboard = () => {
   const navigate = useNavigate();
@@ -27,19 +27,19 @@ const StaffDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-[#F8F9FC] flex items-center justify-center pb-16">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b sticky top-0 z-40">
+    <div className="min-h-screen bg-[#F8F9FC] flex flex-col">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-accent" />
+            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-slate-600" />
             </div>
             <div>
               <h1 className="font-semibold text-sm md:text-base">ADC System</h1>
@@ -53,7 +53,7 @@ const StaffDashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 flex-grow">
         <Tabs defaultValue="queue" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
             <TabsTrigger value="queue" className="flex items-center gap-2">
@@ -75,6 +75,20 @@ const StaffDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <div className="w-full bg-white/90 border-t border-slate-200 backdrop-blur py-2 mt-auto">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <div className="inline-flex items-center gap-2 whitespace-nowrap text-slate-600 text-[clamp(10px,3vw,13px)]">
+            <span>Developed by</span>
+            <img
+              src="/ubytes/ubytesLogo.png"
+              alt="UBYTeS logo"
+              className="h-[clamp(14px,3.8vw,18px)] w-[clamp(14px,3.8vw,18px)] object-contain"
+            />
+            <span>UBYTeS - University of Bohol Young Thinkers Society</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

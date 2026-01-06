@@ -32,19 +32,19 @@ const StudentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-[#F8F9FC] flex items-center justify-center pb-16">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b sticky top-0 z-40">
+    <div className="min-h-screen bg-[#F8F9FC] flex flex-col">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-primary" />
+            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
+              <GraduationCap className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <h1 className="font-semibold text-sm md:text-base">ADC System</h1>
@@ -58,7 +58,7 @@ const StudentDashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 flex-grow">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
             <TabsTrigger value="form" className="flex items-center gap-2">
@@ -80,6 +80,20 @@ const StudentDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <div className="w-full bg-white/90 border-t border-slate-200 backdrop-blur py-2 mt-auto">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <div className="inline-flex items-center gap-2 whitespace-nowrap text-slate-600 text-[clamp(10px,3vw,13px)]">
+            <span>Developed by</span>
+            <img
+              src="/ubytes/ubytesLogo.png"
+              alt="UBYTeS logo"
+              className="h-[clamp(14px,3.8vw,18px)] w-[clamp(14px,3.8vw,18px)] object-contain"
+            />
+            <span>UBYTeS - University of Bohol Young Thinkers Society</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

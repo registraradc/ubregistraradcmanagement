@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Briefcase, ArrowLeft, Loader2 } from 'lucide-react';
+import { Users, ArrowLeft, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -59,7 +59,7 @@ const StaffLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FC] flex flex-col">
       <div className="p-4">
         <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" />
@@ -67,11 +67,11 @@ const StaffLogin = () => {
         </Link>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-grow flex items-center justify-center p-4">
         <Card className="w-full max-w-md animate-slide-up">
           <CardHeader className="text-center">
-            <div className="mx-auto w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mb-3">
-              <Briefcase className="w-7 h-7 text-accent" />
+            <div className="mx-auto w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center mb-3">
+              <Users className="w-7 h-7 text-slate-600" />
             </div>
             <CardTitle className="text-2xl">Staff Portal</CardTitle>
             <CardDescription>Access the registrar dashboard</CardDescription>
@@ -111,6 +111,20 @@ const StaffLogin = () => {
             </form>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="w-full bg-white/90 border-t border-slate-200 backdrop-blur py-2 mt-auto">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <div className="inline-flex items-center gap-2 whitespace-nowrap text-slate-600 text-[clamp(10px,3vw,13px)]">
+            <span>Developed by</span>
+            <img
+              src="/ubytes/ubytesLogo.png"
+              alt="UBYTeS logo"
+              className="h-[clamp(14px,3.8vw,18px)] w-[clamp(14px,3.8vw,18px)] object-contain"
+            />
+            <span>UBYTeS - University of Bohol Young Thinkers Society</span>
+          </div>
+        </div>
       </div>
     </div>
   );
