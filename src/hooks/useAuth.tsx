@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000';
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -72,7 +71,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setSession(refreshed.session);
           }
         });
-        fetch(`${API_BASE}/api/session/refresh`, { credentials: 'include' }).catch(() => {});
       } else {
         setLoading(false);
       }
@@ -119,20 +117,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password
     });
     if (!error) {
-      if (rememberMe) {
-        try {
-          const sessionRes = await supabase.auth.getSession();
-          const accessToken = sessionRes.data.session?.access_token;
-          if (accessToken) {
-            await fetch(`${API_BASE}/api/login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ accessToken, rememberMe: true }),
-            });
-          }
-        } catch {}
-      }
       if (!rememberMe) {
         const keys: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -151,12 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    try {
-      await fetch(`${API_BASE}/api/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-    } catch {}
     await supabase.auth.signOut();
     setProfile(null);
     const keys: string[] = [];
