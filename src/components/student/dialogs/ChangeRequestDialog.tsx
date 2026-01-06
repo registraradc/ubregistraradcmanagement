@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -106,6 +106,26 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
     
     setLoading(true);
     try {
+      // Check if user already has a pending or processing request of this type
+      const { data: existingRequest } = await supabase
+        .from('requests')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .eq('request_type', 'change')
+        .in('status', ['pending', 'processing'])
+        .single();
+
+      if (existingRequest) {
+        toast({
+          title: 'Request Already Exists',
+          description: 'You already have a pending or processing Change request. Please wait for it to be completed.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        setShowConfirm(false);
+        return;
+      }
+
       const { error } = await supabase.from('requests').insert([{
         user_id: user.id,
         id_number: formData.idNumber,
@@ -133,9 +153,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
     } catch (error: any) {
       toast({
         title: 'Submission Failed',
-        description: error.message.includes('unique constraint') 
-          ? 'You already have a pending Change request. Please wait for it to be processed.' 
-          : error.message,
+        description: error.message,
         variant: 'destructive',
       });
     } finally {
@@ -219,68 +237,58 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
               <p className="text-sm text-muted-foreground mb-4">
                 Enter the new courses to replace the old ones:
               </p>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="min-w-[80px]">Replacing</TableHead>
-                      <TableHead className="min-w-[100px]">New Code</TableHead>
-                      <TableHead className="min-w-[150px]">Descriptive Title</TableHead>
-                      <TableHead className="min-w-[100px]">Section</TableHead>
-                      <TableHead className="min-w-[100px]">Time</TableHead>
-                      <TableHead className="min-w-[80px]">Day</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {newCourses.map((course, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium text-muted-foreground">
-                          {oldCourses[index]?.courseCode}
-                        </TableCell>
-                        <TableCell>
+              <div className="space-y-4">
+                {newCourses.map((course, index) => (
+                  <Card key={index} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <p className="text-sm font-medium text-muted-foreground mb-3">
+                        Replacing: <span className="text-foreground">{oldCourses[index]?.courseCode}</span>
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">New Course Code</Label>
                           <Input
                             placeholder="e.g., CS102"
                             value={course.courseCode}
                             onChange={(e) => updateNewCourse(index, 'courseCode', e.target.value)}
-                            className="min-w-[90px]"
                           />
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Descriptive Title</Label>
                           <Input
-                            placeholder="Title"
+                            placeholder="e.g., Advanced Programming"
                             value={course.descriptiveTitle}
                             onChange={(e) => updateNewCourse(index, 'descriptiveTitle', e.target.value)}
-                            className="min-w-[140px]"
                           />
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Section Code</Label>
                           <Input
-                            placeholder="A1"
+                            placeholder="e.g., A1"
                             value={course.sectionCode}
                             onChange={(e) => updateNewCourse(index, 'sectionCode', e.target.value)}
-                            className="min-w-[70px]"
                           />
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Time</Label>
                           <Input
-                            placeholder="8:00-10:00"
+                            placeholder="e.g., 8:00-10:00"
                             value={course.time}
                             onChange={(e) => updateNewCourse(index, 'time', e.target.value)}
-                            className="min-w-[90px]"
                           />
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label className="text-xs">Day</Label>
                           <Input
-                            placeholder="MWF"
+                            placeholder="e.g., MWF"
                             value={course.day}
                             onChange={(e) => updateNewCourse(index, 'day', e.target.value)}
-                            className="min-w-[70px]"
                           />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
               <DialogFooter className="mt-6 gap-2">
                 <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
