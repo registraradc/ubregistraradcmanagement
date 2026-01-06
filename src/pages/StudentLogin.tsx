@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +20,6 @@ const StudentLogin = () => {
   const [loading, setLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -44,7 +42,7 @@ const StudentLogin = () => {
     }
 
     setLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword, rememberMe);
+    const { error } = await signIn(loginEmail, loginPassword);
     setLoading(false);
 
     if (error) {
@@ -161,10 +159,6 @@ const StudentLogin = () => {
                       required
                       className="input-focus"
                     />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="stay-signed-in" checked={rememberMe} onCheckedChange={(v) => setRememberMe(Boolean(v))} />
-                    <Label htmlFor="stay-signed-in">Stay signed in</Label>
                   </div>
                   <Button type="submit" className="w-full" size="lg" disabled={loading}>
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Login'}

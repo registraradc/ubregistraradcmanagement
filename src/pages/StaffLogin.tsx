@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Briefcase, ArrowLeft, Loader2 } from 'lucide-react';
@@ -20,7 +19,6 @@ const StaffLogin = () => {
   const [loading, setLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,8 +37,8 @@ const StaffLogin = () => {
       }
     }
 
-  setLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword, rememberMe);
+    setLoading(true);
+    const { error } = await signIn(loginEmail, loginPassword);
     setLoading(false);
 
     if (error) {
@@ -103,10 +101,6 @@ const StaffLogin = () => {
                   required
                   className="input-focus"
                 />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="stay-signed-in" checked={rememberMe} onCheckedChange={(v) => setRememberMe(Boolean(v))} />
-                <Label htmlFor="stay-signed-in">Stay signed in</Label>
               </div>
               <Button type="submit" className="w-full" size="lg" disabled={loading}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Login'}
