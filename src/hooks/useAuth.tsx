@@ -114,21 +114,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
-    if (rememberMe) {
-      try {
-        await fetch(`${API_BASE}/api/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ email, password, rememberMe: true }),
-        });
-      } catch {}
-    }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     if (!error) {
+      if (rememberMe) {
+        try {
+          const sessionRes = await supabase.auth.getSession();
+          const accessToken = sessionRes.data.session?.access_token;
+          if (accessToken) {
+            await fetch(`${API_BASE}/api/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ accessToken, rememberMe: true }),
+            });
+          }
+        } catch {}
+      }
       if (!rememberMe) {
         const keys: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {

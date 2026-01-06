@@ -21,6 +21,16 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
 
+function effectiveSameSite() {
+  try {
+    const client = new URL(CLIENT_ORIGIN);
+    const sameOrigin = client.hostname === 'localhost' && String(client.port || (client.protocol === 'https:' ? 443 : 80)) === String(PORT);
+    return sameOrigin ? COOKIE_SAMESITE : 'none';
+  } catch {
+    return COOKIE_SAMESITE;
+  }
+}
+
 const supabaseClient = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 const supabaseAdmin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : null;
 if (!supabaseAdmin) {
@@ -180,22 +190,31 @@ async function revokeAllForUser(userId) {
 
 app.post('/api/login', async (req, res) => {
   try {
-    const { email, password, rememberMe } = req.body || {};
-    if (!email || !password) return res.status(400).json({ error: 'invalid_request' });
-    if (!supabaseClient) return res.status(500).json({ error: 'server_not_configured' });
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error || !data || !data.user) return res.status(401).json({ error: 'invalid_credentials' });
+    const { email, password, rememberMe, accessToken } = req.body || {};
+    let userId = null;
+    if (accessToken) {
+      if (!supabaseClient) return res.status(500).json({ error: 'server_not_configured' });
+      const { data, error } = await supabaseClient.auth.getUser(accessToken);
+      if (error || !data?.user) return res.status(401).json({ error: 'invalid_token' });
+      userId = data.user.id;
+    } else {
+      if (!email || !password) return res.status(400).json({ error: 'invalid_request' });
+      if (!supabaseClient) return res.status(500).json({ error: 'server_not_configured' });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error || !data || !data.user) return res.status(401).json({ error: 'invalid_credentials' });
+      userId = data.user.id;
+    }
     if (!rememberMe) return res.status(200).json({ ok: true });
     const expiresAt = Date.now() + COOKIE_MAX_AGE_SECONDS * 1000;
-    const token = await createSession(data.user.id, expiresAt);
+    const token = await createSession(userId, expiresAt);
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
       secure: COOKIE_SECURE,
-      sameSite: COOKIE_SAMESITE,
+      sameSite: effectiveSameSite(),
       maxAge: COOKIE_MAX_AGE_SECONDS * 1000,
       path: '/',
     });
-    console.log('[auth-server] Created session for user', data.user.id, 'expires in seconds', COOKIE_MAX_AGE_SECONDS);
+    console.log('[auth-server] Created session for user', userId, 'expires in seconds', COOKIE_MAX_AGE_SECONDS);
     return res.status(200).json({ ok: true });
   } catch {
     return res.status(500).json({ error: 'server_error' });
@@ -214,7 +233,7 @@ app.get('/api/session/refresh', async (req, res) => {
     res.cookie(COOKIE_NAME, rotated.newToken, {
       httpOnly: true,
       secure: COOKIE_SECURE,
-      sameSite: COOKIE_SAMESITE,
+      sameSite: effectiveSameSite(),
       maxAge: COOKIE_MAX_AGE_SECONDS * 1000,
       path: '/',
     });
