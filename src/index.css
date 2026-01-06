@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -109,32 +109,48 @@
 
 @layer base {
   * {
-    @apply border-border;
+border-color: hsl(var(--border));
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    @apply font-semibold tracking-tight;
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 }
 
 @layer components {
   .card-glass {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-md;
+    background-color: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(4px);
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: var(--shadow-md);
   }
 
   .btn-gradient {
     background: var(--gradient-primary);
-    @apply text-primary-foreground font-medium transition-all duration-300;
+    color: hsl(var(--primary-foreground));
+    font-weight: 500;
+    transition: all 0.3s ease;
   }
 
   .btn-gradient:hover {
-    @apply shadow-lg transform scale-[1.02];
+    box-shadow: var(--shadow-lg);
+    transform: scale(1.02);
+  }
+
+  .btn-gradient:hover {
+    box-shadow: var(--shadow-lg);
+    transform: scale(1.02);
   }
 
   .hero-gradient {
@@ -142,23 +158,34 @@
   }
 
   .input-focus {
-    @apply focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background));
+    transition: all 0.2s ease-in-out;
   }
 
   .status-pending {
-    @apply bg-warning/10 text-warning border-warning/30;
+    background-color: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
+    border-color: hsl(var(--warning) / 0.3);
   }
 
   .status-processing {
-    @apply bg-primary/10 text-primary border-primary/30;
+    background-color: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.3);
   }
 
   .status-approved {
-    @apply bg-success/10 text-success border-success/30;
+    background-color: hsl(var(--success) / 0.1);
+    color: hsl(var(--success));
+    border-color: hsl(var(--success) / 0.3);
   }
 
   .status-rejected {
-    @apply bg-destructive/10 text-destructive border-destructive/30;
+    background-color: hsl(var(--destructive) / 0.1);
+    color: hsl(var(--destructive));
+    border-color: hsl(var(--destructive) / 0.3);
   }
 }
 
