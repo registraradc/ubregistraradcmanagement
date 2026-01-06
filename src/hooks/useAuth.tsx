@@ -15,7 +15,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signUp: (email: string, password: string, role: 'student' | 'staff') => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -106,17 +106,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: null };
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
+    if (!error) {
+      if (rememberMe) {
+        document.cookie = "adc_remember=1; Max-Age=2592000; Path=/";
+      } else {
+        document.cookie = "adc_remember=; Max-Age=0; Path=/";
+      }
+    }
     return { error };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    document.cookie = "adc_remember=; Max-Age=0; Path=/";
   };
 
   return (
