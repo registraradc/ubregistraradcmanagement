@@ -30,14 +30,15 @@ interface Request {
 }
 
 const RequestStatusList = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [queuePositions, setQueuePositions] = useState<Record<string, number>>({});
 
   const fetchRequests = async () => {
     if (!user) return;
@@ -79,6 +80,45 @@ const RequestStatusList = () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  useEffect(() => {
+    const pending = requests.filter((r) => r.status === 'pending');
+    if (pending.length === 0) {
+      setQueuePositions({});
+      return;
+    }
+
+    let cancelled = false;
+
+    const computeQueuePositions = async () => {
+      const results = await Promise.all(
+        pending.map(async (r) => {
+          const { data, error } = await supabase.rpc('get_request_queue_position', { p_request_id: r.id });
+          if (error || data == null) {
+            return { id: r.id, pos: undefined as number | undefined };
+          }
+          return { id: r.id, pos: data as number };
+        })
+      );
+
+      if (cancelled) return;
+
+      const map: Record<string, number> = {};
+      results.forEach((res) => {
+        if (res.pos !== undefined) map[res.id] = res.pos;
+      });
+      setQueuePositions(map);
+    };
+
+    computeQueuePositions();
+
+    const intervalId = window.setInterval(computeQueuePositions, 10000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [requests]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -284,6 +324,11 @@ const RequestStatusList = () => {
                         <span className="capitalize">{request.status}</span>
                       </span>
                     </Badge>
+                    {request.status === 'pending' && (
+                      <Badge variant="secondary" className="text-xs">
+                        <span>Queue #{queuePositions[request.id] ?? '...'}</span>
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-xs md:text-sm text-muted-foreground">
                     Submitted: {format(new Date(request.created_at), 'MMM d, yyyy h:mm a')}
@@ -345,6 +390,11 @@ const RequestStatusList = () => {
                       <span className="capitalize">{selectedRequest.status}</span>
                     </span>
                   </Badge>
+                  {selectedRequest.status === 'pending' && (
+                    <Badge variant="secondary">
+                      <span>Queue #{queuePositions[selectedRequest.id] ?? '...'}</span>
+                    </Badge>
+                  )}
                 </div>
                 
                 <div className="text-sm space-y-1">

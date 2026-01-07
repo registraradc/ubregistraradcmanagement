@@ -116,6 +116,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      get_request_queue_position: {
+        Args: { p_request_id: string }
+        Returns: number
+      }
     }
     Enums: {
       request_status: "pending" | "processing" | "approved" | "rejected"
