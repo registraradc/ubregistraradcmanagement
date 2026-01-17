@@ -78,6 +78,9 @@ const getReasonsForType = (type: FormData['requestType']) => {
 
 const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const selectContentClassName =
+    'bg-popover z-50 max-h-60 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]';
+  const selectItemWrapClassName = '!whitespace-normal !break-words';
   const [formData, setFormData] = useState<FormData>({
     idNumber: '',
     college: '',
@@ -197,9 +200,9 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                 <SelectTrigger className="input-focus">
                   <SelectValue placeholder="Select college" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-50 max-h-60 w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] md:w-[24rem] md:max-w-[24rem]">
+                <SelectContent className={selectContentClassName}>
                   {colleges.map((college) => (
-                    <SelectItem key={college.abbreviation} value={college.name}>
+                    <SelectItem key={college.abbreviation} value={college.name} className={selectItemWrapClassName}>
                       {isMobile ? college.abbreviation : college.name}
                     </SelectItem>
                   ))}
@@ -217,9 +220,9 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                 <SelectTrigger className="input-focus">
                   <SelectValue placeholder="Select program" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-50 max-h-60 w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] md:w-[24rem] md:max-w-[24rem]">
+                <SelectContent className={selectContentClassName}>
                   {programs.map((program) => (
-                    <SelectItem key={program} value={program}>
+                    <SelectItem key={program} value={program} className={selectItemWrapClassName}>
                       {program}
                     </SelectItem>
                   ))}
@@ -314,7 +317,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                 <SelectTrigger className="input-focus">
                   <SelectValue placeholder="Select request type" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-50 max-h-60 w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] md:w-[24rem] md:max-w-[24rem]">
+                <SelectContent className={selectContentClassName}>
                   <SelectItem value="add">
                     <div className="flex flex-col">
                       <span>Add Course</span>
@@ -344,9 +347,9 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                 <SelectTrigger className="input-focus">
                   <SelectValue placeholder={formData.requestType ? 'Select reason' : 'Select request type first'} />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-50 max-h-60 w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] md:w-[24rem] md:max-w-[24rem]">
+                <SelectContent className={selectContentClassName}>
                   {getReasonsForType(formData.requestType).map((reason) => (
-                    <SelectItem key={reason} value={reason}>
+                    <SelectItem key={reason} value={reason} className={selectItemWrapClassName}>
                       {reason}
                     </SelectItem>
                   ))}
