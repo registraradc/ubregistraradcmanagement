@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -43,7 +44,54 @@ const RequestQueue = () => {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [rejectRemarks, setRejectRemarks] = useState('');
+  const [selectedRejectReason, setSelectedRejectReason] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const getRejectReasons = (type: Request['request_type']) => {
+    switch (type) {
+      case 'add':
+      case 'add_with_exception':
+        return [
+          'Exceeds unit load',
+          'Course full',
+          'Prerequisite not met',
+          'Grade pending',
+          'Not in the curriculum',
+          'Deadline passed',
+          'Schedule conflict',
+          'Scholarship/financial restriction',
+          'No approval',
+          'Duplicate enrollment',
+        ];
+      case 'change':
+        return [
+          'Section full',
+          'Schedule conflict',
+          'Exceeds unit load',
+          'Part of a block section',
+          'Not offered this term',
+          'Deadline passed',
+          'No approval',
+          'Curriculum restriction',
+          'Overload/underload issue',
+          'Not applicable',
+        ];
+      case 'drop':
+        return [
+          'Below minimum load',
+          'Required for graduation',
+          'Scholarship/financial restriction',
+          'No approval',
+          'Part of a block section',
+          'Drop limit exceeded',
+          'Policy restriction',
+          'Deadline passed',
+          'Not applicable',
+        ];
+      default:
+        return [];
+    }
+  };
 
   const fetchRequests = async () => {
     const { data, error } = await supabase
@@ -181,14 +229,21 @@ const RequestQueue = () => {
   };
 
   const handleReject = async () => {
-    if (!selectedRequest || !rejectRemarks.trim()) return;
+    if (!selectedRequest) return;
+    const trimmedRemarks = rejectRemarks.trim();
+    if (!trimmedRemarks && !selectedRejectReason) return;
+    const finalRemarks = selectedRejectReason
+      ? trimmedRemarks
+        ? `${selectedRejectReason} - ${trimmedRemarks}`
+        : selectedRejectReason
+      : trimmedRemarks;
     
     setProcessing(true);
     const { error } = await supabase
       .from('requests')
       .update({ 
         status: 'rejected',
-        remarks: rejectRemarks,
+        remarks: finalRemarks,
         completed_at: new Date().toISOString()
       })
       .eq('id', selectedRequest.id);
@@ -207,6 +262,7 @@ const RequestQueue = () => {
       setShowDetails(false);
       setShowRejectDialog(false);
       setRejectRemarks('');
+      setSelectedRejectReason('');
       fetchRequests();
     }
     setProcessing(false);
@@ -509,31 +565,62 @@ const RequestQueue = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+      <Dialog
+        open={showRejectDialog}
+        onOpenChange={(open) => {
+          setShowRejectDialog(open);
+          if (!open) {
+            setRejectRemarks('');
+            setSelectedRejectReason('');
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reject Request</DialogTitle>
             <DialogDescription>
-              Please provide a reason for rejecting this request.
+              Select a reason or provide remarks for rejecting this request.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="remarks">Remarks / Reason *</Label>
-            <Textarea
-              id="remarks"
-              placeholder="Enter the reason for rejection..."
-              value={rejectRemarks}
-              onChange={(e) => setRejectRemarks(e.target.value)}
-              rows={4}
-              className="mt-2"
-            />
+          <div className="py-4 space-y-4">
+            <div>
+              <Label>Predefined Reason</Label>
+              <Select
+                value={selectedRejectReason}
+                onValueChange={setSelectedRejectReason}
+                disabled={!selectedRequest}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedRequest &&
+                    getRejectReasons(selectedRequest.request_type).map((reason) => (
+                      <SelectItem key={reason} value={reason}>
+                        {reason}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="remarks">Remarks / Reason</Label>
+              <Textarea
+                id="remarks"
+                placeholder="Enter additional details or a custom reason..."
+                value={rejectRemarks}
+                onChange={(e) => setRejectRemarks(e.target.value)}
+                rows={4}
+                className="mt-2"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRejectDialog(false)}>Cancel</Button>
             <Button 
               variant="destructive" 
               onClick={handleReject}
-              disabled={processing || !rejectRemarks.trim()}
+              disabled={processing || (!rejectRemarks.trim() && !selectedRejectReason)}
             >
               {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Rejection'}
             </Button>
