@@ -27,7 +27,54 @@ export interface FormData {
   phoneNumber: string;
   facebook: string;
   requestType: 'add' | 'add_with_exception' | 'change' | 'drop' | '';
+  reason: string;
 }
+
+const getReasonsForType = (type: FormData['requestType']) => {
+  switch (type) {
+    case 'add':
+    case 'add_with_exception':
+      return [
+        'Grade unavailable during enlistment',
+        'Prerequisite course marked NG during enlistment',
+        'Underload – requesting additional units',
+        'Course not offered during enlistment',
+        'Schedule conflict resolved',
+        'Graduation requirement',
+        'Curriculum adjustment (newly added or reclassified course)',
+        'Replacement for dropped/cancelled course',
+        'Academic advisor recommendation',
+        'Elective choice within allowed units',
+        'Transfer credit evaluation pending',
+        'Enrollment error during enlistment',
+        'Repetition of a failed course',
+        'Change in study plan/major',
+      ];
+    case 'change':
+      return [
+        'Schedule conflict with another required course',
+        'Instructor or section change requested/approved',
+        'Shift in academic track or major',
+        'Academic Adviser/Dean recommendation for better progression',
+        'Time/room adjustment for accessibility or personal circumstances',
+        'Error correction in initial enlistment',
+      ];
+    case 'drop':
+      return [
+        'Course dissolved or cancelled by the department',
+        'Schedule conflict unresolved',
+        'Course repetition not needed (already passed via transfer/credit)',
+        'Financial or scholarship unit limit compliance',
+        'Academic advisor recommendation to lighten the load',
+        'Course not required for graduation after curriculum review',
+        'Instructor approval to withdraw',
+        'Health or personal reasons',
+        'Enrollment error correction',
+      ];
+    default:
+      return [];
+  }
+};
 
 const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -43,6 +90,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
     phoneNumber: '',
     facebook: '',
     requestType: '',
+    reason: '',
   });
 
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -53,10 +101,16 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
   const programs = formData.college ? getProgramsByCollege(formData.college) : [];
 
   const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (field === 'college') {
-      setFormData(prev => ({ ...prev, program: '' }));
-    }
+    setFormData(prev => {
+      const updated: FormData = { ...prev, [field]: value };
+      if (field === 'college') {
+        updated.program = '';
+      }
+      if (field === 'requestType') {
+        updated.reason = '';
+      }
+      return updated;
+    });
   };
 
   const isFormValid = () => {
@@ -68,7 +122,8 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
       formData.firstName &&
       formData.email &&
       formData.phoneNumber &&
-      formData.requestType
+      formData.requestType &&
+      formData.reason
     );
   };
 
@@ -112,6 +167,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
       phoneNumber: '',
       facebook: '',
       requestType: '',
+      reason: '',
     });
     onSubmitSuccess();
   };
@@ -141,7 +197,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                 <SelectTrigger className="input-focus">
                   <SelectValue placeholder="Select college" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
+                <SelectContent className="bg-popover z-50 max-h-60 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
                   {colleges.map((college) => (
                     <SelectItem key={college.abbreviation} value={college.name}>
                       {isMobile ? college.abbreviation : college.name}
@@ -161,7 +217,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                 <SelectTrigger className="input-focus">
                   <SelectValue placeholder="Select program" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-50 max-h-60">
+                <SelectContent className="bg-popover z-50 max-h-60 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
                   {programs.map((program) => (
                     <SelectItem key={program} value={program}>
                       {program}
@@ -249,7 +305,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2 lg:col-span-1">
+            <div className="space-y-2 md:col-span-1 lg:col-span-1">
               <Label htmlFor="requestType">Request Type *</Label>
               <Select 
                 value={formData.requestType} 
@@ -258,7 +314,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                 <SelectTrigger className="input-focus">
                   <SelectValue placeholder="Select request type" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
+                <SelectContent className="bg-popover z-50 max-h-60 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
                   <SelectItem value="add">
                     <div className="flex flex-col">
                       <span>Add Course</span>
@@ -274,6 +330,26 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                   </SelectItem>
                   <SelectItem value="change">Change Course</SelectItem>
                   <SelectItem value="drop">Drop Course</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 md:col-span-1 lg:col-span-1">
+              <Label htmlFor="reason">Reason *</Label>
+              <Select 
+                value={formData.reason} 
+                onValueChange={(v) => handleInputChange('reason', v)}
+                disabled={!formData.requestType}
+              >
+                <SelectTrigger className="input-focus">
+                  <SelectValue placeholder={formData.requestType ? 'Select reason' : 'Select request type first'} />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50 max-h-60 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
+                  {getReasonsForType(formData.requestType).map((reason) => (
+                    <SelectItem key={reason} value={reason}>
+                      {reason}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -352,6 +352,11 @@ const RequestQueue = () => {
                         {format(new Date(request.created_at), 'MMM d, h:mm a')}
                       </span>
                     </div>
+                    {request.request_data?.reason && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                        Reason: {request.request_data.reason}
+                      </p>
+                    )}
                     {request.request_type === 'add_with_exception' && (
                       <p className="text-xs text-red-600 mt-1">Student needs to meet the Registrar.</p>
                     )}
@@ -434,6 +439,11 @@ const RequestQueue = () => {
 
               <div className="border-t pt-4">
                 <p className="font-medium mb-3">Request Details:</p>
+                {selectedRequest.request_data?.reason && (
+                  <p className="text-sm mb-2">
+                    <span className="text-muted-foreground">Reason:</span> {selectedRequest.request_data.reason}
+                  </p>
+                )}
                 {selectedRequest.request_type === 'add_with_exception' && (
                   <p className="text-sm text-red-600 mb-2">Student needs to meet the Registrar.</p>
                 )}

@@ -110,7 +110,7 @@ const AddRequestExceptionDialog = ({ open, onClose, formData, onSuccess }: AddRe
         phone_number: formData.phoneNumber,
         facebook: formData.facebook || null,
         request_type: 'add_with_exception' as const,
-        request_data: JSON.parse(JSON.stringify({ courses })),
+        request_data: JSON.parse(JSON.stringify({ courses, reason: formData.reason })),
       }]);
 
       if (error) throw error;

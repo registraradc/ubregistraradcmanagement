@@ -10,7 +10,7 @@ import { Loader2, CheckCircle, XCircle, FileText, ChevronRight } from 'lucide-re
 interface Request {
   id: string;
   user_id: string;
-  request_type: 'add' | 'change' | 'drop' | 'change_year_level';
+  request_type: 'add' | 'add_with_exception' | 'change' | 'drop' | 'change_year_level';
   status: 'pending' | 'processing' | 'approved' | 'rejected';
   remarks: string | null;
   created_at: string;
@@ -249,6 +249,11 @@ const RequestHistory = () => {
                       </>
                     )}
                   </div>
+                  {request.request_data?.reason && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                      Reason: {request.request_data.reason}
+                    </p>
+                  )}
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
               </div>
@@ -332,6 +337,11 @@ const RequestHistory = () => {
 
               <div className="border-t pt-4">
                 <p className="font-medium mb-3">Request Details:</p>
+                {selectedRequest.request_data?.reason && (
+                  <p className="text-sm mb-2">
+                    <span className="text-muted-foreground">Reason:</span> {selectedRequest.request_data.reason}
+                  </p>
+                )}
                 {renderCourseDetails(selectedRequest)}
               </div>
             </div>

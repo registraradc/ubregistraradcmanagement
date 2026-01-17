@@ -139,7 +139,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
         phone_number: formData.phoneNumber,
         facebook: formData.facebook || null,
         request_type: 'change' as const,
-        request_data: JSON.parse(JSON.stringify({ oldCourses, newCourses })),
+        request_data: JSON.parse(JSON.stringify({ oldCourses, newCourses, reason: formData.reason })),
       }]);
 
       if (error) throw error;

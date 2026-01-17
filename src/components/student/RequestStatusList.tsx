@@ -325,6 +325,11 @@ const RequestStatusList = () => {
                   <p className="text-xs md:text-sm text-muted-foreground">
                     Submitted: {format(new Date(request.created_at), 'MMM d, yyyy h:mm a')}
                   </p>
+                  {request.request_data?.reason && (
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Reason: {request.request_data.reason}
+                    </p>
+                  )}
                   {request.request_type === 'add_with_exception' && (
                     <p className="text-xs md:text-sm text-red-600">
                       Please see the Registrar.
@@ -417,6 +422,11 @@ const RequestStatusList = () => {
 
               <div className="border-t pt-4">
                 <p className="font-medium mb-3">Request Details:</p>
+                {selectedRequest.request_data?.reason && (
+                  <p className="text-sm mb-2">
+                    <span className="text-muted-foreground">Reason:</span> {selectedRequest.request_data.reason}
+                  </p>
+                )}
                 {selectedRequest.request_type === 'add_with_exception' && (
                   <p className="text-sm text-red-600 mb-2">Please see the Registrar.</p>
                 )}

@@ -111,7 +111,7 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
         phone_number: formData.phoneNumber,
         facebook: formData.facebook || null,
         request_type: 'drop' as const,
-        request_data: JSON.parse(JSON.stringify({ courses })),
+        request_data: JSON.parse(JSON.stringify({ courses, reason: formData.reason })),
       }]);
 
       if (error) throw error;
