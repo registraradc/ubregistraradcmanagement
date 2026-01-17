@@ -335,7 +335,9 @@ const RequestStatusList = () => {
                       Kindly check your study load through the student portal.
                     </p>
                   )}
-                  {request.request_type === 'add_with_exception' && (
+                  {request.request_type === 'add_with_exception' &&
+                    request.status !== 'approved' &&
+                    request.status !== 'rejected' && (
                     <p className="text-xs md:text-sm text-red-600">
                       Please see the Registrar.
                     </p>
@@ -442,7 +444,9 @@ const RequestStatusList = () => {
                     <span className="text-muted-foreground">Reason:</span> {selectedRequest.request_data.reason}
                   </p>
                 )}
-                {selectedRequest.request_type === 'add_with_exception' && (
+                {selectedRequest.request_type === 'add_with_exception' &&
+                  selectedRequest.status !== 'approved' &&
+                  selectedRequest.status !== 'rejected' && (
                   <p className="text-sm text-red-600 mb-2">Please see the Registrar.</p>
                 )}
                 {renderCourseDetails(selectedRequest)}
