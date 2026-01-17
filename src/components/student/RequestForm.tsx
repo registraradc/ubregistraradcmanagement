@@ -6,10 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { colleges, getProgramsByCollege } from '@/lib/colleges';
 import { useMediaQuery } from '@/hooks/use-mobile';
-import AddRequestDialog from './dialogs/AddRequestDialog';
-import ChangeRequestDialog from './dialogs/ChangeRequestDialog';
-import DropRequestDialog from './dialogs/DropRequestDialog';
-import ChangeYearLevelDialog from './dialogs/ChangeYearLevelDialog';
+ import AddRequestDialog from './dialogs/AddRequestDialog';
+ import ChangeRequestDialog from './dialogs/ChangeRequestDialog';
+ import DropRequestDialog from './dialogs/DropRequestDialog';
+ import AddRequestExceptionDialog from './dialogs/AddRequestExceptionDialog';
 
 interface RequestFormProps {
   onSubmitSuccess: () => void;
@@ -26,7 +26,7 @@ export interface FormData {
   email: string;
   phoneNumber: string;
   facebook: string;
-  requestType: 'add' | 'change' | 'drop' | 'change_year_level' | '';
+  requestType: 'add' | 'add_with_exception' | 'change' | 'drop' | '';
 }
 
 const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
@@ -46,9 +46,9 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
   });
 
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddExceptionDialog, setShowAddExceptionDialog] = useState(false);
   const [showChangeDialog, setShowChangeDialog] = useState(false);
   const [showDropDialog, setShowDropDialog] = useState(false);
-  const [showYearLevelDialog, setShowYearLevelDialog] = useState(false);
 
   const programs = formData.college ? getProgramsByCollege(formData.college) : [];
 
@@ -79,23 +79,23 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
       case 'add':
         setShowAddDialog(true);
         break;
+      case 'add_with_exception':
+        setShowAddExceptionDialog(true);
+        break;
       case 'change':
         setShowChangeDialog(true);
         break;
       case 'drop':
         setShowDropDialog(true);
         break;
-      case 'change_year_level':
-        setShowYearLevelDialog(true);
-        break;
     }
   };
 
   const handleDialogClose = () => {
     setShowAddDialog(false);
+    setShowAddExceptionDialog(false);
     setShowChangeDialog(false);
     setShowDropDialog(false);
-    setShowYearLevelDialog(false);
   };
 
   const handleSuccess = () => {
@@ -259,10 +259,21 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                   <SelectValue placeholder="Select request type" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
-                  <SelectItem value="add">Add Course</SelectItem>
+                  <SelectItem value="add">
+                    <div className="flex flex-col">
+                      <span>Add Course</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="add_with_exception">
+                    <div className="flex flex-col">
+                      <span>Add Course with Exception</span>
+                      <span className="text-xs text-muted-foreground">
+                        Note: you need to see the Registrar for this request.
+                      </span>
+                    </div>
+                  </SelectItem>
                   <SelectItem value="change">Change Course</SelectItem>
                   <SelectItem value="drop">Drop Course</SelectItem>
-                  <SelectItem value="change_year_level">Change Year Level</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -286,24 +297,24 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
         formData={formData}
         onSuccess={handleSuccess}
       />
+      <AddRequestExceptionDialog
+        open={showAddExceptionDialog}
+        onClose={handleDialogClose}
+        formData={formData}
+        onSuccess={handleSuccess}
+      />
       <ChangeRequestDialog 
         open={showChangeDialog} 
         onClose={handleDialogClose}
         formData={formData}
         onSuccess={handleSuccess}
       />
-      <DropRequestDialog 
-        open={showDropDialog} 
-        onClose={handleDialogClose}
-        formData={formData}
-        onSuccess={handleSuccess}
-      />
-      <ChangeYearLevelDialog 
-        open={showYearLevelDialog} 
-        onClose={handleDialogClose}
-        formData={formData}
-        onSuccess={handleSuccess}
-      />
+       <DropRequestDialog 
+         open={showDropDialog} 
+         onClose={handleDialogClose}
+         formData={formData}
+         onSuccess={handleSuccess}
+       />
     </>
   );
 };

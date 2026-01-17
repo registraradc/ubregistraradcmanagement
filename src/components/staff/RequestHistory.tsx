@@ -40,6 +40,7 @@ const RequestHistory = () => {
       .from('requests')
       .select('*')
       .in('status', ['approved', 'rejected'])
+      .neq('request_type', 'change_year_level')
       .order('completed_at', { ascending: false })
       .limit(100);
 
@@ -89,12 +90,12 @@ const RequestHistory = () => {
     switch (type) {
       case 'add':
         return 'Add Course';
+      case 'add_with_exception':
+        return 'Add Course with Exception';
       case 'change':
         return 'Change Course';
       case 'drop':
         return 'Drop Course';
-      case 'change_year_level':
-        return 'Change Year Level';
       default:
         return type;
     }
@@ -114,15 +115,6 @@ const RequestHistory = () => {
   const renderCourseDetails = (request: Request) => {
     const data = request.request_data;
     
-    if (request.request_type === 'change_year_level') {
-      return (
-        <div className="space-y-2">
-          <p><strong>Current Year Level:</strong> {data.currentYearLevel}</p>
-          <p><strong>Reason:</strong> {data.reason}</p>
-        </div>
-      );
-    }
-
     if (request.request_type === 'change') {
       return (
         <div className="space-y-4">

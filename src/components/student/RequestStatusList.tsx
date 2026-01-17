@@ -13,7 +13,7 @@ import { Loader2, ChevronRight, Trash2, Clock, Settings, CheckCircle, XCircle, F
 
 interface Request {
   id: string;
-  request_type: 'add' | 'change' | 'drop' | 'change_year_level';
+  request_type: 'add' | 'add_with_exception' | 'change' | 'drop' | 'change_year_level';
   status: 'pending' | 'processing' | 'approved' | 'rejected';
   remarks: string | null;
   created_at: string;
@@ -47,6 +47,7 @@ const RequestStatusList = () => {
       .from('requests')
       .select('*')
       .eq('user_id', user.id)
+      .neq('request_type', 'change_year_level')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -139,12 +140,12 @@ const RequestStatusList = () => {
     switch (type) {
       case 'add':
         return 'Add Course';
+      case 'add_with_exception':
+        return 'Add Course with Exception';
       case 'change':
         return 'Change Course';
       case 'drop':
         return 'Drop Course';
-      case 'change_year_level':
-        return 'Change Year Level';
       default:
         return type;
     }
@@ -195,15 +196,6 @@ const RequestStatusList = () => {
   const renderCourseDetails = (request: Request) => {
     const data = request.request_data;
     
-    if (request.request_type === 'change_year_level') {
-      return (
-        <div className="space-y-2">
-          <p><strong>Current Year Level:</strong> {data.currentYearLevel}</p>
-          <p><strong>Reason:</strong> {data.reason}</p>
-        </div>
-      );
-    }
-
     if (request.request_type === 'change') {
       return (
         <div className="space-y-4">
@@ -333,6 +325,11 @@ const RequestStatusList = () => {
                   <p className="text-xs md:text-sm text-muted-foreground">
                     Submitted: {format(new Date(request.created_at), 'MMM d, yyyy h:mm a')}
                   </p>
+                  {request.request_type === 'add_with_exception' && (
+                    <p className="text-xs md:text-sm text-red-600">
+                      Please see the Registrar.
+                    </p>
+                  )}
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
               </div>
@@ -420,6 +417,9 @@ const RequestStatusList = () => {
 
               <div className="border-t pt-4">
                 <p className="font-medium mb-3">Request Details:</p>
+                {selectedRequest.request_type === 'add_with_exception' && (
+                  <p className="text-sm text-red-600 mb-2">Please see the Registrar.</p>
+                )}
                 {renderCourseDetails(selectedRequest)}
               </div>
 

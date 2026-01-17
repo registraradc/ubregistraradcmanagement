@@ -123,7 +123,7 @@ export type Database = {
     }
     Enums: {
       request_status: "pending" | "processing" | "approved" | "rejected"
-      request_type: "add" | "change" | "drop" | "change_year_level"
+      request_type: "add" | "add_with_exception" | "change" | "drop" | "change_year_level"
       user_role: "student" | "staff"
     }
     CompositeTypes: {
@@ -253,7 +253,7 @@ export const Constants = {
   public: {
     Enums: {
       request_status: ["pending", "processing", "approved", "rejected"],
-      request_type: ["add", "change", "drop", "change_year_level"],
+      request_type: ["add", "add_with_exception", "change", "drop", "change_year_level"],
       user_role: ["student", "staff"],
     },
   },
