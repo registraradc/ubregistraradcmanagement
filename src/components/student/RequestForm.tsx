@@ -6,10 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { colleges, getProgramsByCollege } from '@/lib/colleges';
 import { useMediaQuery } from '@/hooks/use-mobile';
- import AddRequestDialog from './dialogs/AddRequestDialog';
- import ChangeRequestDialog from './dialogs/ChangeRequestDialog';
- import DropRequestDialog from './dialogs/DropRequestDialog';
- import AddRequestExceptionDialog from './dialogs/AddRequestExceptionDialog';
+import AddRequestDialog from './dialogs/AddRequestDialog';
+import ChangeRequestDialog from './dialogs/ChangeRequestDialog';
+import DropRequestDialog from './dialogs/DropRequestDialog';
+import AddRequestExceptionDialog from './dialogs/AddRequestExceptionDialog';
 
 interface RequestFormProps {
   onSubmitSuccess: () => void;

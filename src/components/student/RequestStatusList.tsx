@@ -330,6 +330,11 @@ const RequestStatusList = () => {
                       Reason: {request.request_data.reason}
                     </p>
                   )}
+                  {request.status === 'approved' && (
+                    <p className="text-xs md:text-sm text-blue-600">
+                      Kindly check your study load through the student portal.
+                    </p>
+                  )}
                   {request.request_type === 'add_with_exception' && (
                     <p className="text-xs md:text-sm text-red-600">
                       Please see the Registrar.
@@ -412,10 +417,20 @@ const RequestStatusList = () => {
                   )}
                 </div>
 
-                {selectedRequest.remarks && (
-                  <div className="mt-4 p-3 bg-muted rounded-lg">
+                {(selectedRequest.remarks || selectedRequest.status === 'approved') && (
+                  <div
+                    className={`mt-4 p-3 rounded-lg ${selectedRequest.status === 'rejected' ? 'bg-red-50' : 'bg-muted'}`}
+                  >
                     <p className="text-sm font-medium mb-1">Remarks:</p>
-                    <p className="text-sm text-muted-foreground">{selectedRequest.remarks}</p>
+                    {selectedRequest.remarks ? (
+                      <p className={`text-sm ${selectedRequest.status === 'rejected' ? 'text-red-600' : 'text-muted-foreground'}`}>
+                        {selectedRequest.remarks}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-blue-600">
+                        Kindly check your study load through the student portal.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
