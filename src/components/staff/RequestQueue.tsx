@@ -375,7 +375,7 @@ const RequestQueue = () => {
               <User className="w-5 h-5" />
               Request Details
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-base font-semibold text-blue-600">
               {selectedRequest && getRequestTypeLabel(selectedRequest.request_type)}
             </DialogDescription>
           </DialogHeader>

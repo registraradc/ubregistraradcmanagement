@@ -266,7 +266,7 @@ const RequestHistory = () => {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Request Details</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-base font-semibold text-blue-600">
               {selectedRequest && getRequestTypeLabel(selectedRequest.request_type)}
             </DialogDescription>
           </DialogHeader>

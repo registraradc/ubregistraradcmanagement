@@ -181,7 +181,7 @@ const DropRequestDialog = ({ open, onClose, formData, onSuccess }: DropRequestDi
                 {courses.map((course, index) => (
                   <Card key={index} className="overflow-hidden">
                     <CardContent className="p-4">
-                      <p className="text-sm font-medium text-muted-foreground mb-3">Course {index + 1}</p>
+                      <p className="text-sm font-medium text-blue-600 mb-3">Course {index + 1}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <Label className="text-xs">Course Code</Label>
