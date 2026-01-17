@@ -34,14 +34,14 @@ const RoleSelect = () => {
                 </div>
                 
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                  I'm a Student
+                  Student
                 </h2>
                 <p className="text-slate-500 mb-6">
                   Submit and track your course modification requests
                 </p>
 
                 <ul className="space-y-3 mb-8 flex-grow">
-                  {['Add, drop, or change courses', 'Request year level changes', 'Track request status in real-time'].map((item, i) => (
+                  {['Add, drop, or change courses', 'Track request status in real-time'].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-slate-600">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
                       <span className="text-sm font-medium">{item}</span>
@@ -71,7 +71,7 @@ const RoleSelect = () => {
                 </div>
                 
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                  I'm Registrar Staff
+                  Registrar Staff
                 </h2>
                 <p className="text-slate-500 mb-6">
                   Process and manage student requests
