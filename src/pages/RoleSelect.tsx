@@ -112,7 +112,7 @@ const RoleSelect = () => {
               ADC Request Management
             </h1>
             <p className="text-slate-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-4">
-              Streamline your course adding, dropping, and changing requests with our efficient digital system.
+              Simplify course adding, dropping, and changing with digital ease.
             </p>
           </div>
 

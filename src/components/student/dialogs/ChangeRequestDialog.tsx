@@ -247,7 +247,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
                 {newCourses.map((course, index) => (
                   <Card key={index} className="overflow-hidden">
                     <CardContent className="p-4">
-                      <p className="text-sm font-medium text-muted-foreground mb-3">
+                      <p className="text-sm font-bold text-muted-foreground mb-3">
                         Replacing: <span className="text-foreground">{oldCourses[index]?.courseCode}</span>
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
