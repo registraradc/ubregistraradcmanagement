@@ -182,6 +182,12 @@ border-color: hsl(var(--border));
     border-color: hsl(var(--success) / 0.3);
   }
 
+  .status-partially-approved {
+    background-color: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
   .status-rejected {
     background-color: hsl(var(--destructive) / 0.1);
     color: hsl(var(--destructive));

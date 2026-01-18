@@ -7,16 +7,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { Loader2, CheckCircle, XCircle, FileText, ChevronRight } from 'lucide-react';
 
+interface RequestCourse {
+  courseCode?: string;
+  descriptiveTitle?: string;
+  sectionCode?: string;
+  time?: string;
+  day?: string;
+}
+
+interface RequestData {
+  reason?: string;
+  courses?: RequestCourse[];
+  oldCourses?: Array<{ courseCode?: string }>;
+  newCourses?: RequestCourse[];
+}
+
 interface Request {
   id: string;
   user_id: string;
   request_type: 'add' | 'add_with_exception' | 'change' | 'drop' | 'change_year_level';
-  status: 'pending' | 'processing' | 'approved' | 'rejected';
+  status: 'pending' | 'processing' | 'approved' | 'rejected' | 'partially_approved';
   remarks: string | null;
   created_at: string;
   processed_at: string | null;
   completed_at: string | null;
-  request_data: any;
+  request_data: RequestData;
   id_number: string;
   college: string;
   program: string;
@@ -29,17 +44,33 @@ interface Request {
   facebook: string | null;
 }
 
+interface RequestItem {
+  id: string;
+  request_id: string;
+  group_id: string | null;
+  action: 'add' | 'drop';
+  course_code: string;
+  descriptive_title: string | null;
+  section_code: string | null;
+  time: string | null;
+  day: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  remarks: string | null;
+}
+
 const RequestHistory = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [selectedRequestItems, setSelectedRequestItems] = useState<RequestItem[] | null>(null);
+  const [selectedRequestItemsLoading, setSelectedRequestItemsLoading] = useState(false);
 
   const fetchRequests = async () => {
     const { data, error } = await supabase
       .from('requests')
       .select('*')
-      .in('status', ['approved', 'rejected'])
+      .in('status', ['approved', 'rejected', 'partially_approved'])
       .neq('request_type', 'change_year_level')
       .order('completed_at', { ascending: false })
       .limit(100);
@@ -75,9 +106,43 @@ const RequestHistory = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!showDetails || !selectedRequest) {
+      setSelectedRequestItems(null);
+      return;
+    }
+
+    let cancelled = false;
+    setSelectedRequestItemsLoading(true);
+
+    const fetchItems = async () => {
+      const { data, error } = await supabase
+        .from('request_items')
+        .select('*')
+        .eq('request_id', selectedRequest.id)
+        .order('created_at', { ascending: true });
+
+      if (cancelled) return;
+
+      if (error) {
+        setSelectedRequestItems(null);
+      } else {
+        setSelectedRequestItems(data as RequestItem[]);
+      }
+      setSelectedRequestItemsLoading(false);
+    };
+
+    fetchItems();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showDetails, selectedRequest]);
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
+      case 'partially_approved':
         return <CheckCircle className="w-4 h-4" />;
       case 'rejected':
         return <XCircle className="w-4 h-4" />;
@@ -105,6 +170,8 @@ const RequestHistory = () => {
     switch (status) {
       case 'approved':
         return 'status-approved';
+      case 'partially_approved':
+        return 'status-partially-approved';
       case 'rejected':
         return 'status-rejected';
       default:
@@ -112,7 +179,166 @@ const RequestHistory = () => {
     }
   };
 
-  const renderCourseDetails = (request: Request) => {
+  const renderCourseDetails = (request: Request, items: RequestItem[] | null) => {
+    if (items && items.length > 0) {
+      if (request.request_type === 'change') {
+        const groups = items.reduce<Record<string, RequestItem[]>>((acc, item) => {
+          const key = item.group_id ?? item.id;
+          acc[key] = acc[key] ? [...acc[key], item] : [item];
+          return acc;
+        }, {});
+
+        const groupList = Object.entries(groups).map(([groupId, groupItems]) => {
+          const dropItem = groupItems.find((i) => i.action === 'drop');
+          const addItem = groupItems.find((i) => i.action === 'add');
+          const status = addItem?.status ?? dropItem?.status ?? 'pending';
+          const remarks = addItem?.remarks ?? dropItem?.remarks ?? null;
+
+          return {
+            groupId,
+            dropItem,
+            addItem,
+            status,
+            remarks,
+          };
+        });
+
+        return (
+          <div className="space-y-3">
+            <div className="hidden md:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>From</TableHead>
+                    <TableHead>To</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Section</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Day</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Remarks</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {groupList.map((g) => (
+                    <TableRow key={g.groupId}>
+                      <TableCell>{g.dropItem?.course_code ?? ''}</TableCell>
+                      <TableCell>{g.addItem?.course_code ?? ''}</TableCell>
+                      <TableCell>{g.addItem?.descriptive_title ?? ''}</TableCell>
+                      <TableCell>{g.addItem?.section_code ?? ''}</TableCell>
+                      <TableCell>{g.addItem?.time ?? ''}</TableCell>
+                      <TableCell>{g.addItem?.day ?? ''}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getStatusClass(g.status)}>
+                          <span className="capitalize">{g.status.replace('_', ' ')}</span>
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[260px] whitespace-normal break-words">
+                        {g.remarks ?? ''}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="md:hidden space-y-3">
+              {groupList.map((g) => (
+                <div key={g.groupId} className="p-3 rounded-lg border">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <p className="text-sm font-medium">{g.dropItem?.course_code ?? ''} → {g.addItem?.course_code ?? ''}</p>
+                    <Badge variant="outline" className={getStatusClass(g.status)}>
+                      <span className="capitalize">{g.status.replace('_', ' ')}</span>
+                    </Badge>
+                  </div>
+                  {g.addItem?.descriptive_title && (
+                    <p className="text-xs text-muted-foreground break-words">
+                      {g.addItem.descriptive_title}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
+                    <span className="text-xs text-muted-foreground">Section</span>
+                    <span className="text-xs font-medium break-words">{g.addItem?.section_code ?? ''}</span>
+                    <span className="text-xs text-muted-foreground">Time</span>
+                    <span className="text-xs font-medium break-words">{g.addItem?.time ?? ''}</span>
+                    <span className="text-xs text-muted-foreground">Day</span>
+                    <span className="text-xs font-medium break-words">{g.addItem?.day ?? ''}</span>
+                    <span className="text-xs text-muted-foreground">Remarks</span>
+                    <span className="text-xs font-medium break-words">{g.remarks ?? ''}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-3">
+          <div className="hidden md:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Section</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Day</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Remarks</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((i) => (
+                  <TableRow key={i.id}>
+                    <TableCell>{i.course_code}</TableCell>
+                    <TableCell>{i.descriptive_title ?? ''}</TableCell>
+                    <TableCell>{i.section_code ?? ''}</TableCell>
+                    <TableCell>{i.time ?? ''}</TableCell>
+                    <TableCell>{i.day ?? ''}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={getStatusClass(i.status)}>
+                        <span className="capitalize">{i.status.replace('_', ' ')}</span>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[260px] whitespace-normal break-words">
+                      {i.remarks ?? ''}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="md:hidden space-y-3">
+            {items.map((i) => (
+              <div key={i.id} className="p-3 rounded-lg border">
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <p className="text-sm font-medium">{i.course_code}</p>
+                  <Badge variant="outline" className={getStatusClass(i.status)}>
+                    <span className="capitalize">{i.status.replace('_', ' ')}</span>
+                  </Badge>
+                </div>
+                {i.descriptive_title && (
+                  <p className="text-xs text-muted-foreground break-words">
+                    {i.descriptive_title}
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
+                  <span className="text-xs text-muted-foreground">Section</span>
+                  <span className="text-xs font-medium break-words">{i.section_code ?? ''}</span>
+                  <span className="text-xs text-muted-foreground">Time</span>
+                  <span className="text-xs font-medium break-words">{i.time ?? ''}</span>
+                  <span className="text-xs text-muted-foreground">Day</span>
+                  <span className="text-xs font-medium break-words">{i.day ?? ''}</span>
+                  <span className="text-xs text-muted-foreground">Remarks</span>
+                  <span className="text-xs font-medium break-words">{i.remarks ?? ''}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     const data = request.request_data;
     
     if (request.request_type === 'change') {
@@ -121,36 +347,60 @@ const RequestHistory = () => {
           <div>
             <p className="font-medium mb-2">Courses Changed:</p>
             <div className="flex flex-wrap gap-2">
-              {data.oldCourses?.map((c: any, i: number) => (
+              {data.oldCourses?.map((c, i: number) => (
                 <Badge key={i} variant="outline">{c.courseCode}</Badge>
               ))}
             </div>
           </div>
           <div>
             <p className="font-medium mb-2">New Courses:</p>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Section</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Day</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.newCourses?.map((c: any, i: number) => (
-                    <TableRow key={i}>
-                      <TableCell>{c.courseCode}</TableCell>
-                      <TableCell>{c.descriptiveTitle}</TableCell>
-                      <TableCell>{c.sectionCode}</TableCell>
-                      <TableCell>{c.time}</TableCell>
-                      <TableCell>{c.day}</TableCell>
+            <div className="space-y-3">
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Section</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Day</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {data.newCourses?.map((c, i: number) => (
+                      <TableRow key={i}>
+                        <TableCell>{c.courseCode}</TableCell>
+                        <TableCell>{c.descriptiveTitle}</TableCell>
+                        <TableCell>{c.sectionCode}</TableCell>
+                        <TableCell>{c.time}</TableCell>
+                        <TableCell>{c.day}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="md:hidden space-y-3">
+                {data.newCourses?.map((c, i: number) => (
+                  <div key={i} className="p-3 rounded-lg border">
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <p className="text-sm font-medium">{c.courseCode}</p>
+                    </div>
+                    {c.descriptiveTitle && (
+                      <p className="text-xs text-muted-foreground break-words">
+                        {c.descriptiveTitle}
+                      </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
+                      <span className="text-xs text-muted-foreground">Section</span>
+                      <span className="text-xs font-medium break-words">{c.sectionCode ?? ''}</span>
+                      <span className="text-xs text-muted-foreground">Time</span>
+                      <span className="text-xs font-medium break-words">{c.time ?? ''}</span>
+                      <span className="text-xs text-muted-foreground">Day</span>
+                      <span className="text-xs font-medium break-words">{c.day ?? ''}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -158,29 +408,53 @@ const RequestHistory = () => {
     }
 
     return (
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Section</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>Day</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.courses?.map((c: any, i: number) => (
-              <TableRow key={i}>
-                <TableCell>{c.courseCode}</TableCell>
-                <TableCell>{c.descriptiveTitle}</TableCell>
-                <TableCell>{c.sectionCode}</TableCell>
-                <TableCell>{c.time}</TableCell>
-                <TableCell>{c.day}</TableCell>
+      <div className="space-y-3">
+        <div className="hidden md:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Code</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Section</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Day</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {data.courses?.map((c, i: number) => (
+                <TableRow key={i}>
+                  <TableCell>{c.courseCode}</TableCell>
+                  <TableCell>{c.descriptiveTitle}</TableCell>
+                  <TableCell>{c.sectionCode}</TableCell>
+                  <TableCell>{c.time}</TableCell>
+                  <TableCell>{c.day}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="md:hidden space-y-3">
+          {data.courses?.map((c, i: number) => (
+            <div key={i} className="p-3 rounded-lg border">
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <p className="text-sm font-medium">{c.courseCode}</p>
+              </div>
+              {c.descriptiveTitle && (
+                <p className="text-xs text-muted-foreground break-words">
+                  {c.descriptiveTitle}
+                </p>
+              )}
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
+                <span className="text-xs text-muted-foreground">Section</span>
+                <span className="text-xs font-medium break-words">{c.sectionCode ?? ''}</span>
+                <span className="text-xs text-muted-foreground">Time</span>
+                <span className="text-xs font-medium break-words">{c.time ?? ''}</span>
+                <span className="text-xs text-muted-foreground">Day</span>
+                <span className="text-xs font-medium break-words">{c.day ?? ''}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
@@ -232,7 +506,7 @@ const RequestHistory = () => {
                     <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
                       <span className="flex items-center gap-1">
                         {getStatusIcon(request.status)}
-                        <span className="capitalize">{request.status}</span>
+                        <span className="capitalize">{request.status.replace('_', ' ')}</span>
                       </span>
                     </Badge>
                   </div>
@@ -263,7 +537,7 @@ const RequestHistory = () => {
       </Card>
 
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:w-auto max-w-screen-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Request Details</DialogTitle>
             <DialogDescription className="text-base font-semibold text-blue-600">
@@ -273,34 +547,40 @@ const RequestHistory = () => {
 
           {selectedRequest && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">ID Number:</span>
-                  <p className="font-medium">{selectedRequest.id_number}</p>
+                  <p className="font-medium break-words">{selectedRequest.id_number}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Name:</span>
-                  <p className="font-medium">
+                  <p className="font-medium break-words">
                     {selectedRequest.first_name} {selectedRequest.middle_name} {selectedRequest.last_name}
                     {selectedRequest.suffix && ` ${selectedRequest.suffix}`}
                   </p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">College:</span>
-                  <p className="font-medium">{selectedRequest.college}</p>
+                  <p className="font-medium break-words">{selectedRequest.college}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Program:</span>
-                  <p className="font-medium">{selectedRequest.program}</p>
+                  <p className="font-medium break-words">{selectedRequest.program}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Email:</span>
-                  <p className="font-medium">{selectedRequest.email}</p>
+                  <p className="font-medium break-words">{selectedRequest.email}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Phone:</span>
-                  <p className="font-medium">{selectedRequest.phone_number}</p>
+                  <p className="font-medium break-words">{selectedRequest.phone_number}</p>
                 </div>
+                {selectedRequest.facebook && (
+                  <div>
+                    <span className="text-muted-foreground">Facebook:</span>
+                    <p className="font-medium break-words">{selectedRequest.facebook}</p>
+                  </div>
+                )}
               </div>
 
               <div className="border-t pt-4">
@@ -309,7 +589,7 @@ const RequestHistory = () => {
                   <Badge variant="outline" className={getStatusClass(selectedRequest.status)}>
                     <span className="flex items-center gap-1">
                       {getStatusIcon(selectedRequest.status)}
-                      <span className="capitalize">{selectedRequest.status}</span>
+                      <span className="capitalize">{selectedRequest.status.replace('_', ' ')}</span>
                     </span>
                   </Badge>
                 </div>
@@ -328,8 +608,8 @@ const RequestHistory = () => {
                 </div>
 
                 {selectedRequest.remarks && (
-                  <div className="mt-4 p-3 bg-destructive/10 rounded-lg">
-                    <p className="text-sm font-medium mb-1">Rejection Remarks:</p>
+                  <div className="mt-4 p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium mb-1">Remarks:</p>
                     <p className="text-sm text-muted-foreground">{selectedRequest.remarks}</p>
                   </div>
                 )}
@@ -342,7 +622,13 @@ const RequestHistory = () => {
                     <span className="text-muted-foreground">Reason:</span> {selectedRequest.request_data.reason}
                   </p>
                 )}
-                {renderCourseDetails(selectedRequest)}
+                {selectedRequestItemsLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  renderCourseDetails(selectedRequest, selectedRequestItems)
+                )}
               </div>
             </div>
           )}

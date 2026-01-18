@@ -150,10 +150,16 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
       });
       resetDialog();
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error
+            ? String((error as { message?: unknown }).message)
+            : 'Submission failed';
       toast({
         title: 'Submission Failed',
-        description: error.message,
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -199,7 +205,7 @@ const ChangeRequestDialog = ({ open, onClose, formData, onSuccess }: ChangeReque
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              <DialogFooter className="mt-6">
+              <DialogFooter className="mt-6 gap-2">
                 <Button variant="outline" onClick={handleClose}>Cancel</Button>
                 <Button onClick={handleNextToOld}>Next</Button>
               </DialogFooter>

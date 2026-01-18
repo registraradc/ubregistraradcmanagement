@@ -102,7 +102,7 @@ const RoleSelect = () => {
 
       <div className="w-full bg-white/90 border-t border-slate-200 backdrop-blur py-2">
         <div className="container mx-auto px-4 flex items-center justify-center">
-          <div className="inline-flex items-center gap-2 whitespace-nowrap text-slate-600 text-[clamp(10px,3vw,13px)]">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-slate-600 text-[clamp(10px,3vw,13px)] text-center">
             <span>Developed by</span>
             <img
               src="/ubytes/ubytesLogo.png"

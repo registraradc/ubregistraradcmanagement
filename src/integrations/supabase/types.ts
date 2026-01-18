@@ -41,6 +41,65 @@ export type Database = {
         }
         Relationships: []
       }
+      request_items: {
+        Row: {
+          action: Database["public"]["Enums"]["request_item_action"]
+          course_code: string
+          created_at: string
+          day: string | null
+          decided_at: string | null
+          decided_by: string | null
+          descriptive_title: string | null
+          group_id: string | null
+          id: string
+          remarks: string | null
+          request_id: string
+          section_code: string | null
+          status: Database["public"]["Enums"]["request_item_status"]
+          time: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["request_item_action"]
+          course_code: string
+          created_at?: string
+          day?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          descriptive_title?: string | null
+          group_id?: string | null
+          id?: string
+          remarks?: string | null
+          request_id: string
+          section_code?: string | null
+          status?: Database["public"]["Enums"]["request_item_status"]
+          time?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["request_item_action"]
+          course_code?: string
+          created_at?: string
+          day?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          descriptive_title?: string | null
+          group_id?: string | null
+          id?: string
+          remarks?: string | null
+          request_id?: string
+          section_code?: string | null
+          status?: Database["public"]["Enums"]["request_item_status"]
+          time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           college: string
@@ -120,9 +179,24 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: number
       }
+      finalize_request_decisions: {
+        Args: {
+          p_request_id: string
+          p_item_decisions: Json
+          p_request_remarks?: string | null
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      request_status: "pending" | "processing" | "approved" | "rejected"
+      request_item_action: "add" | "drop"
+      request_item_status: "pending" | "approved" | "rejected"
+      request_status:
+        | "pending"
+        | "processing"
+        | "approved"
+        | "rejected"
+        | "partially_approved"
       request_type: "add" | "add_with_exception" | "change" | "drop" | "change_year_level"
       user_role: "student" | "staff"
     }
