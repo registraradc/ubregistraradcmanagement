@@ -703,6 +703,11 @@ const RequestQueue = () => {
                         <span className="font-medium text-sm md:text-base truncate">
                           {request.last_name}, {request.first_name}
                         </span>
+                        {request.is_flagged && (
+                          <Badge variant="destructive" className="text-xs">
+                            Lacks Dean's Notes/Requirements
+                          </Badge>
+                        )}
                         <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
                           <span className="flex items-center gap-1">
                             {getStatusIcon(request.status)}
@@ -795,6 +800,11 @@ const RequestQueue = () => {
                       <span className="capitalize">{selectedRequest.status}</span>
                     </span>
                   </Badge>
+                  {selectedRequest.is_flagged && (
+                    <Badge variant="destructive">
+                      Lacks Dean's Notes/Requirements
+                    </Badge>
+                  )}
                 </div>
                 
                 <div className="text-sm">
