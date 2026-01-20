@@ -81,26 +81,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl
+        emailRedirectTo: redirectUrl,
+        data: { role }
       }
     });
 
     if (error) {
       return { error };
-    }
-
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: data.user.id,
-          role,
-          email
-        });
-
-      if (profileError) {
-        return { error: profileError as unknown as Error };
-      }
     }
 
     return { error: null };
