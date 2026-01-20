@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { Loader2, Clock, Settings, Play, CheckCircle, XCircle, FileText, User, Search, Filter } from 'lucide-react';
+import { Loader2, Clock, Settings, Play, CheckCircle, XCircle, FileText, User, Search, Filter, Flag } from 'lucide-react';
 import { colleges } from '@/lib/colleges';
 
 interface RequestCourse {
@@ -59,6 +59,7 @@ interface Request {
   email: string;
   phone_number: string;
   facebook: string | null;
+  is_flagged?: boolean;
 }
 
 interface RequestItem {
@@ -96,6 +97,7 @@ const RequestQueue = () => {
   const [showFinalizeConfirmation, setShowFinalizeConfirmation] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCollege, setSelectedCollege] = useState<string>('all');
+  const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
 
   const filteredRequests = requests.filter(request => {
     const searchLower = searchQuery.toLowerCase();
@@ -106,9 +108,38 @@ const RequestQueue = () => {
       (request.middle_name && request.middle_name.toLowerCase().includes(searchLower));
 
     const matchesCollege = selectedCollege === 'all' || request.college === selectedCollege;
+    const matchesFlagged = showFlaggedOnly ? request.is_flagged : true;
 
-    return matchesSearch && matchesCollege;
+    return matchesSearch && matchesCollege && matchesFlagged;
   });
+
+  const toggleFlag = async (e: React.MouseEvent, request: Request) => {
+    e.stopPropagation();
+    const newFlagStatus = !request.is_flagged;
+    
+    // Optimistic update
+    setRequests(requests.map(r => 
+      r.id === request.id ? { ...r, is_flagged: newFlagStatus } : r
+    ));
+
+    const { error } = await supabase
+      .from('requests')
+      .update({ is_flagged: newFlagStatus })
+      .eq('id', request.id);
+
+    if (error) {
+      console.error('Error updating flag status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update flag status',
+        variant: 'destructive',
+      });
+      // Revert optimistic update
+      setRequests(requests.map(r => 
+        r.id === request.id ? { ...r, is_flagged: !newFlagStatus } : r
+      ));
+    }
+  };
 
   const getRejectReasons = (type: Request['request_type']) => {
     switch (type) {
@@ -613,7 +644,15 @@ const RequestQueue = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="w-full md:w-[250px]">
+            <div className="w-full md:w-[250px] flex gap-2">
+              <Button
+                variant={showFlaggedOnly ? "default" : "outline"}
+                size="icon"
+                onClick={() => setShowFlaggedOnly(!showFlaggedOnly)}
+                title={showFlaggedOnly ? "Show All" : "Show Flagged Only"}
+              >
+                <Flag className={`w-4 h-4 ${showFlaggedOnly ? "fill-current" : ""}`} />
+              </Button>
               <Select value={selectedCollege} onValueChange={setSelectedCollege}>
                 <SelectTrigger>
                   <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -651,6 +690,14 @@ const RequestQueue = () => {
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
                       {requests.findIndex(r => r.id === request.id) + 1}
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      onClick={(e) => toggleFlag(e, request)}
+                    >
+                      <Flag className={`w-4 h-4 ${request.is_flagged ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+                    </Button>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-sm md:text-base truncate">

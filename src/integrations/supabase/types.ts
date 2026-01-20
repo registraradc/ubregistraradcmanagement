@@ -121,6 +121,7 @@ export type Database = {
           status: Database["public"]["Enums"]["request_status"]
           suffix: string | null
           user_id: string
+          is_flagged: boolean | null
         }
         Insert: {
           college: string
@@ -142,6 +143,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["request_status"]
           suffix?: string | null
           user_id: string
+          is_flagged?: boolean | null
         }
         Update: {
           college?: string
@@ -163,6 +165,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["request_status"]
           suffix?: string | null
           user_id?: string
+          is_flagged?: boolean | null
         }
         Relationships: []
       }
