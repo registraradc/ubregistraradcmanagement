@@ -649,7 +649,7 @@ const RequestQueue = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                      {index + 1}
+                      {requests.findIndex(r => r.id === request.id) + 1}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1">
