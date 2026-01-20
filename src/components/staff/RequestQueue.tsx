@@ -16,11 +16,13 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { Loader2, Clock, Settings, Play, CheckCircle, XCircle, FileText, User } from 'lucide-react';
+import { Loader2, Clock, Settings, Play, CheckCircle, XCircle, FileText, User, Search, Filter } from 'lucide-react';
+import { colleges } from '@/lib/colleges';
 
 interface RequestCourse {
   courseCode?: string;
@@ -92,6 +94,21 @@ const RequestQueue = () => {
   const [selectedRequestItemsLoading, setSelectedRequestItemsLoading] = useState(false);
   const [itemDecisions, setItemDecisions] = useState<Record<string, ItemDecision>>({});
   const [showFinalizeConfirmation, setShowFinalizeConfirmation] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCollege, setSelectedCollege] = useState<string>('all');
+
+  const filteredRequests = requests.filter(request => {
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch =
+      request.id_number.toLowerCase().includes(searchLower) ||
+      request.first_name.toLowerCase().includes(searchLower) ||
+      request.last_name.toLowerCase().includes(searchLower) ||
+      (request.middle_name && request.middle_name.toLowerCase().includes(searchLower));
+
+    const matchesCollege = selectedCollege === 'all' || request.college === selectedCollege;
+
+    return matchesSearch && matchesCollege;
+  });
 
   const getRejectReasons = (type: Request['request_type']) => {
     switch (type) {
@@ -578,60 +595,96 @@ const RequestQueue = () => {
   return (
     <>
       <Card className="animate-fade-in">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg md:text-xl flex items-center gap-2">
-            <span>Request Queue</span>
-            <Badge variant="secondary">{requests.length}</Badge>
-          </CardTitle>
+        <CardHeader className="pb-3 space-y-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+              <span>Request Queue</span>
+              <Badge variant="secondary">{filteredRequests.length}</Badge>
+            </CardTitle>
+          </div>
+          
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by ID or Name..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="w-full md:w-[250px]">
+              <Select value={selectedCollege} onValueChange={setSelectedCollege}>
+                <SelectTrigger>
+                  <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Filter by College" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Colleges</SelectItem>
+                  {colleges.map((college) => (
+                    <SelectItem key={college.abbreviation} value={college.name}>
+                      {college.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0 md:p-6 md:pt-0">
           <div className="divide-y">
-            {requests.map((request, index) => (
-              <div
-                key={request.id}
-                className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                onClick={() => {
-                  setSelectedRequest(request);
-                  setShowDetails(true);
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                    {index + 1}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm md:text-base truncate">
-                        {request.last_name}, {request.first_name}
-                      </span>
-                      <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
-                        <span className="flex items-center gap-1">
-                          {getStatusIcon(request.status)}
-                          <span className="capitalize">{request.status}</span>
+            {filteredRequests.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                No requests found matching your filters.
+              </div>
+            ) : (
+              filteredRequests.map((request, index) => (
+                <div
+                  key={request.id}
+                  className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => {
+                    setSelectedRequest(request);
+                    setShowDetails(true);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-sm md:text-base truncate">
+                          {request.last_name}, {request.first_name}
                         </span>
-                      </Badge>
+                        <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
+                          <span className="flex items-center gap-1">
+                            {getStatusIcon(request.status)}
+                            <span className="capitalize">{request.status}</span>
+                          </span>
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span>{getRequestTypeLabel(request.request_type)}</span>
+                        <span>•</span>
+                        <span>{request.id_number}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="hidden sm:inline">
+                          {format(new Date(request.created_at), 'MMM d, h:mm a')}
+                        </span>
+                      </div>
+                      {request.request_data?.reason && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                          Reason: {request.request_data.reason}
+                        </p>
+                      )}
+                      {request.request_type === 'add_with_exception' && (
+                        <p className="text-xs text-red-600 mt-1">Student needs to meet the Registrar.</p>
+                      )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span>{getRequestTypeLabel(request.request_type)}</span>
-                      <span>•</span>
-                      <span>{request.id_number}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span className="hidden sm:inline">
-                        {format(new Date(request.created_at), 'MMM d, h:mm a')}
-                      </span>
-                    </div>
-                    {request.request_data?.reason && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                        Reason: {request.request_data.reason}
-                      </p>
-                    )}
-                    {request.request_type === 'add_with_exception' && (
-                      <p className="text-xs text-red-600 mt-1">Student needs to meet the Registrar.</p>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

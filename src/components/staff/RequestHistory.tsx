@@ -3,9 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { Loader2, CheckCircle, XCircle, FileText, ChevronRight } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, FileText, ChevronRight, Search, Filter } from 'lucide-react';
+import { colleges } from '@/lib/colleges';
 
 interface RequestCourse {
   courseCode?: string;
@@ -65,6 +68,24 @@ const RequestHistory = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedRequestItems, setSelectedRequestItems] = useState<RequestItem[] | null>(null);
   const [selectedRequestItemsLoading, setSelectedRequestItemsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCollege, setSelectedCollege] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+
+  const filteredRequests = requests.filter(request => {
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch =
+      request.id_number.toLowerCase().includes(searchLower) ||
+      request.first_name.toLowerCase().includes(searchLower) ||
+      request.last_name.toLowerCase().includes(searchLower) ||
+      (request.middle_name && request.middle_name.toLowerCase().includes(searchLower));
+
+    const matchesCollege = selectedCollege === 'all' || request.college === selectedCollege;
+
+    const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus;
+
+    return matchesSearch && matchesCollege && matchesStatus;
+  });
 
   const fetchRequests = async () => {
     const { data, error } = await supabase
@@ -484,54 +505,107 @@ const RequestHistory = () => {
   return (
     <>
       <Card className="animate-fade-in">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg md:text-xl">Request History</CardTitle>
+        <CardHeader className="pb-3 space-y-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+              <span>Request History</span>
+              <Badge variant="secondary">{filteredRequests.length}</Badge>
+            </CardTitle>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by ID or Name..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="w-full md:w-[200px]">
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger>
+                  <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="partially_approved">Partially Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full md:w-[250px]">
+              <Select value={selectedCollege} onValueChange={setSelectedCollege}>
+                <SelectTrigger>
+                  <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Filter by College" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Colleges</SelectItem>
+                  {colleges.map((college) => (
+                    <SelectItem key={college.abbreviation} value={college.name}>
+                      {college.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0 md:p-6 md:pt-0">
           <div className="divide-y">
-            {requests.map((request) => (
-              <div
-                key={request.id}
-                className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                onClick={() => {
-                  setSelectedRequest(request);
-                  setShowDetails(true);
-                }}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm md:text-base truncate">
-                      {request.last_name}, {request.first_name}
-                    </span>
-                    <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
-                      <span className="flex items-center gap-1">
-                        {getStatusIcon(request.status)}
-                        <span className="capitalize">{request.status.replace('_', ' ')}</span>
+            {filteredRequests.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                No requests found matching your filters.
+              </div>
+            ) : (
+              filteredRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => {
+                    setSelectedRequest(request);
+                    setShowDetails(true);
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm md:text-base truncate">
+                        {request.last_name}, {request.first_name}
                       </span>
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span>{getRequestTypeLabel(request.request_type)}</span>
-                    <span>•</span>
-                    <span>{request.id_number}</span>
-                    {request.completed_at && (
-                      <>
-                        <span className="hidden sm:inline">•</span>
-                        <span className="hidden sm:inline">
-                          Completed: {format(new Date(request.completed_at), 'MMM d, yyyy')}
+                      <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
+                        <span className="flex items-center gap-1">
+                          {getStatusIcon(request.status)}
+                          <span className="capitalize">{request.status.replace('_', ' ')}</span>
                         </span>
-                      </>
+                      </Badge>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span>{getRequestTypeLabel(request.request_type)}</span>
+                      <span>•</span>
+                      <span>{request.id_number}</span>
+                      {request.completed_at && (
+                        <>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="hidden sm:inline">
+                            Completed: {format(new Date(request.completed_at), 'MMM d, yyyy')}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {request.request_data?.reason && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                        Reason: {request.request_data.reason}
+                      </p>
                     )}
                   </div>
-                  {request.request_data?.reason && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                      Reason: {request.request_data.reason}
-                    </p>
-                  )}
+                  <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
