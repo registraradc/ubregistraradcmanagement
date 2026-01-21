@@ -99,6 +99,8 @@ const RequestQueue = () => {
   const [selectedCollege, setSelectedCollege] = useState<string>('all');
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
   const [finalizeRemarks, setFinalizeRemarks] = useState('');
+  const [isEditingType, setIsEditingType] = useState(false);
+  const [editRequestType, setEditRequestType] = useState<Request['request_type']>('add');
 
   const filteredRequests = requests.filter(request => {
     const searchLower = searchQuery.toLowerCase();
@@ -232,6 +234,7 @@ const RequestQueue = () => {
       setSelectedRequestItems(null);
       setItemDecisions({});
       setFinalizeRemarks('');
+      setIsEditingType(false);
       return;
     }
 
@@ -262,6 +265,7 @@ const RequestQueue = () => {
           return acc;
         }, {})
       );
+      setEditRequestType(selectedRequest.request_type);
       setSelectedRequestItemsLoading(false);
     };
 
@@ -307,6 +311,37 @@ const RequestQueue = () => {
       default:
         return '';
     }
+  };
+
+  const updateRequestType = async () => {
+    if (!selectedRequest) return;
+    if (editRequestType === selectedRequest.request_type) {
+      setIsEditingType(false);
+      return;
+    }
+    setProcessing(true);
+    const { error } = await supabase
+      .from('requests')
+      .update({ request_type: editRequestType })
+      .eq('id', selectedRequest.id);
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update request type.',
+        variant: 'destructive',
+      });
+      setProcessing(false);
+      return;
+    }
+    const updated = { ...selectedRequest, request_type: editRequestType };
+    setSelectedRequest(updated);
+    setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+    toast({
+      title: 'Updated',
+      description: 'Request type has been updated.',
+    });
+    setIsEditingType(false);
+    setProcessing(false);
   };
 
   const handleStartProcess = async () => {
@@ -817,6 +852,52 @@ const RequestQueue = () => {
                   </p>
                 </div>
               </div>
+
+              {selectedRequest.status === 'pending' && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Request Type:</span>
+                      {!isEditingType ? (
+                        <span className="font-medium">{getRequestTypeLabel(selectedRequest.request_type)}</span>
+                      ) : (
+                        <Select
+                          value={editRequestType}
+                          onValueChange={(v) => setEditRequestType(v as Request['request_type'])}
+                          disabled={processing}
+                        >
+                          <SelectTrigger className="w-[260px]">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="add">Add Course</SelectItem>
+                            <SelectItem value="add_with_exception">Add Course with Exception</SelectItem>
+                            <SelectItem value="change">Change Course</SelectItem>
+                            <SelectItem value="drop">Drop Course</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                    {!isEditingType ? (
+                      <Button variant="outline" size="sm" onClick={() => {
+                        setEditRequestType(selectedRequest.request_type);
+                        setIsEditingType(true);
+                      }}>
+                        Edit
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={updateRequestType} disabled={processing}>
+                          Save
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setIsEditingType(false)} disabled={processing}>
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="border-t pt-4">
                 <p className="font-medium mb-3">Request Details:</p>
