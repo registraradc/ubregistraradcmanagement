@@ -98,6 +98,7 @@ const RequestQueue = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCollege, setSelectedCollege] = useState<string>('all');
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
+  const [finalizeRemarks, setFinalizeRemarks] = useState('');
 
   const filteredRequests = requests.filter(request => {
     const searchLower = searchQuery.toLowerCase();
@@ -230,6 +231,7 @@ const RequestQueue = () => {
     if (!showDetails || !selectedRequest) {
       setSelectedRequestItems(null);
       setItemDecisions({});
+      setFinalizeRemarks('');
       return;
     }
 
@@ -453,7 +455,7 @@ const RequestQueue = () => {
     const { error } = await supabase.rpc('finalize_request_decisions', {
       p_request_id: selectedRequest.id,
       p_item_decisions: payload,
-      p_request_remarks: null,
+      p_request_remarks: finalizeRemarks.trim() ? finalizeRemarks.trim() : null,
     });
 
     if (error) {
@@ -476,6 +478,7 @@ const RequestQueue = () => {
     setSelectedRequest(null);
     setSelectedRequestItems(null);
     setItemDecisions({});
+    setFinalizeRemarks('');
     setProcessing(false);
     fetchRequests();
   };
@@ -1074,6 +1077,20 @@ const RequestQueue = () => {
                   </div>
                 )}
               </div>
+
+              {selectedRequest.status === 'processing' && selectedRequestItems && selectedRequestItems.length > 0 && (
+                <div className="border rounded-lg p-3">
+                  <Label>Comment</Label>
+                  <Textarea
+                    placeholder="Additional comments for the student..."
+                    value={finalizeRemarks}
+                    onChange={(e) => setFinalizeRemarks(e.target.value)}
+                    rows={3}
+                    className="mt-2"
+                    disabled={processing}
+                  />
+                </div>
+              )}
 
               <DialogFooter className="border-t pt-4 gap-2 flex-col sm:flex-row">
                 {selectedRequest.status === 'pending' && (
