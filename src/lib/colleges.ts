@@ -101,6 +101,17 @@ export const colleges: College[] = [
     programs: [
       "Bachelor of Science in Pharmacy"
     ]
+  },
+  {
+    name: "Graduate School",
+    abbreviation: "GS",
+    programs: [
+      "Doctor of Philosophy in Educational Management (PhD-EM)",
+      "Doctor of Philosophy in Business Management (PhD-BM)",
+      "Doctor of Philosophy in Human Resource Management (PhD-HRM)",
+      "Doctor of Philosophy in Public Administration (PhD-PA)",
+      "Doctor of Philosophy in Filipino (PhD-Fil)"
+    ]
   }
 ];
 
