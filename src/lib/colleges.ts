@@ -38,7 +38,9 @@ export const colleges: College[] = [
       "Bachelor of Science in Computer Engineering",
       "Bachelor of Science in Computer Science",
       "Bachelor of Science in Aircraft Maintenance Technology",
-      "Associate in Aircraft Maintenance Technology"
+      "Associate in Aircraft Maintenance Technology",
+      "Bachelor of Science in Architecture",
+      "Bachelor of Fine Arts major in Visual Communication/Advertising"
     ]
   },
   {
