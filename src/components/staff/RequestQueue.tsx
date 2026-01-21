@@ -705,7 +705,7 @@ const RequestQueue = () => {
                         </span>
                         {request.is_flagged && (
                           <Badge variant="destructive" className="text-xs">
-                            Lacks Dean's Notes/Requirements
+                            Lacking Dean's Note/Requirements
                           </Badge>
                         )}
                         <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
@@ -802,7 +802,7 @@ const RequestQueue = () => {
                   </Badge>
                   {selectedRequest.is_flagged && (
                     <Badge variant="destructive">
-                      Lacks Dean's Notes/Requirements
+                      Lacking Dean's Note/Requirements
                     </Badge>
                   )}
                 </div>

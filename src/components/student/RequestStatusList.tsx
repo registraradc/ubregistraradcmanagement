@@ -44,6 +44,7 @@ interface Request {
   email: string;
   phone_number: string;
   facebook: string | null;
+  is_flagged: boolean | null;
 }
 
 interface RequestItem {
@@ -598,6 +599,11 @@ const RequestStatusList = () => {
                     <span className="font-medium text-sm md:text-base truncate">
                       {getRequestTypeLabel(request.request_type)}
                     </span>
+                    {request.is_flagged && (
+                      <Badge variant="destructive" className="text-xs">
+                        Lacking Dean's Note/Requirements
+                      </Badge>
+                    )}
                     <Badge variant="outline" className={`${getStatusClass(request.status)} text-xs`}>
                       <span className="flex items-center gap-1">
                         {getStatusIcon(request.status)}
@@ -711,6 +717,11 @@ const RequestStatusList = () => {
                       <span className="capitalize">{selectedRequest.status.replace('_', ' ')}</span>
                     </span>
                   </Badge>
+                  {selectedRequest.is_flagged && (
+                    <Badge variant="destructive">
+                      Lacking Dean's Note/Requirements
+                    </Badge>
+                  )}
                   {selectedRequest.status === 'pending' && (
                     <Badge variant="secondary">
                       <span>Queue #{queuePositions[selectedRequest.id] ?? '...'}</span>
