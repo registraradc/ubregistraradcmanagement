@@ -599,7 +599,7 @@ const RequestStatusList = () => {
                     <span className="font-medium text-sm md:text-base truncate">
                       {getRequestTypeLabel(request.request_type)}
                     </span>
-                    {request.is_flagged && (
+                    {request.is_flagged && request.status !== 'approved' && request.status !== 'rejected' && request.status !== 'partially_approved' && (
                       <Badge variant="destructive" className="text-xs">
                         Lacking Dean's Note/Requirements
                       </Badge>
@@ -717,7 +717,7 @@ const RequestStatusList = () => {
                       <span className="capitalize">{selectedRequest.status.replace('_', ' ')}</span>
                     </span>
                   </Badge>
-                  {selectedRequest.is_flagged && (
+                  {selectedRequest.is_flagged && selectedRequest.status !== 'approved' && selectedRequest.status !== 'rejected' && selectedRequest.status !== 'partially_approved' && (
                     <Badge variant="destructive">
                       Lacking Dean's Note/Requirements
                     </Badge>
