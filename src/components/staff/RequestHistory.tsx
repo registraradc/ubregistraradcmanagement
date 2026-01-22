@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { Loader2, CheckCircle, XCircle, FileText, ChevronRight, Search, Filter, Edit } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, FileText, ChevronRight, ChevronLeft, Search, Filter, Edit } from 'lucide-react';
 import { colleges } from '@/lib/colleges';
 import { useToast } from '@/hooks/use-toast';
 
@@ -89,35 +89,69 @@ const RequestHistory = () => {
   const [itemDecisions, setItemDecisions] = useState<Record<string, ItemDecision>>({});
   const [processing, setProcessing] = useState(false);
   const [showFinalizeConfirmation, setShowFinalizeConfirmation] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 100;
 
-  const filteredRequests = requests.filter(request => {
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch =
-      request.id_number.toLowerCase().includes(searchLower) ||
-      request.first_name.toLowerCase().includes(searchLower) ||
-      request.last_name.toLowerCase().includes(searchLower) ||
-      (request.middle_name && request.middle_name.toLowerCase().includes(searchLower));
+  // Debounce search query
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
-    const matchesCollege = selectedCollege === 'all' || request.college === selectedCollege;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus;
-
-    return matchesSearch && matchesCollege && matchesStatus;
-  });
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, selectedCollege, selectedStatus]);
 
   const fetchRequests = async () => {
-    const { data, error } = await supabase
+    setLoading(true);
+    
+    let query = supabase
       .from('requests')
-      .select('*')
+      .select('*', { count: 'exact' })
       .in('status', ['approved', 'rejected', 'partially_approved'])
-      .neq('request_type', 'change_year_level')
+      .neq('request_type', 'change_year_level');
+
+    if (selectedStatus !== 'all') {
+      query = query.eq('status', selectedStatus);
+    }
+
+    if (selectedCollege !== 'all') {
+      query = query.eq('college', selectedCollege);
+    }
+
+    if (debouncedSearchQuery) {
+      query = query.or(`id_number.ilike.%${debouncedSearchQuery}%,first_name.ilike.%${debouncedSearchQuery}%,last_name.ilike.%${debouncedSearchQuery}%,middle_name.ilike.%${debouncedSearchQuery}%`);
+    }
+
+    const from = (currentPage - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    const { data, error, count } = await query
       .order('completed_at', { ascending: false })
-      .limit(100);
+      .range(from, to);
 
     if (error) {
       console.error('Error fetching history:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch request history.',
+        variant: 'destructive',
+      });
     } else {
       setRequests(data as Request[]);
+      if (count !== null) {
+        setTotalCount(count);
+        setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
+      }
     }
     setLoading(false);
   };
@@ -143,7 +177,7 @@ const RequestHistory = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentPage, debouncedSearchQuery, selectedCollege, selectedStatus]);
 
   useEffect(() => {
     if (!showDetails || !selectedRequest) {
@@ -949,18 +983,6 @@ const RequestHistory = () => {
     );
   }
 
-  if (requests.length === 0) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-          <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground">No completed requests yet</p>
-          <p className="text-sm text-muted-foreground/70">Processed requests will appear here</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <>
       <Card className="animate-fade-in">
@@ -968,7 +990,7 @@ const RequestHistory = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg md:text-xl flex items-center gap-2">
               <span>Request History</span>
-              <Badge variant="secondary">{filteredRequests.length}</Badge>
+              <Badge variant="secondary">{totalCount}</Badge>
             </CardTitle>
           </div>
 
@@ -1016,12 +1038,12 @@ const RequestHistory = () => {
         </CardHeader>
         <CardContent className="p-0 md:p-6 md:pt-0">
           <div className="divide-y">
-            {filteredRequests.length === 0 ? (
+            {requests.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 No requests found matching your filters.
               </div>
             ) : (
-              filteredRequests.map((request) => (
+              requests.map((request) => (
                 <div
                   key={request.id}
                   className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
@@ -1066,6 +1088,37 @@ const RequestHistory = () => {
               ))
             )}
           </div>
+          
+          {totalCount > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between p-4 gap-4 border-t">
+              <div className="text-sm text-muted-foreground order-2 sm:order-1">
+                Showing {Math.min(totalCount, (currentPage - 1) * ITEMS_PER_PAGE + 1)} to {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} entries
+              </div>
+              <div className="flex items-center gap-2 order-1 sm:order-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Previous Page</span>
+                </Button>
+                <div className="text-sm font-medium min-w-[3rem] text-center">
+                  {currentPage} / {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || loading}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Next Page</span>
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
