@@ -121,7 +121,7 @@ const RequestHistory = () => {
       .neq('request_type', 'change_year_level');
 
     if (selectedStatus !== 'all') {
-      query = query.eq('status', selectedStatus);
+      query = query.eq('status', selectedStatus as Request['status']);
     }
 
     if (selectedCollege !== 'all') {
