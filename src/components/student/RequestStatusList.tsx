@@ -9,7 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { Loader2, ChevronRight, Trash2, Clock, Settings, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Loader2, ChevronRight, Trash2, Clock, Settings, CheckCircle, XCircle, FileText, Pencil } from 'lucide-react';
+import EditRequestDialog from './dialogs/EditRequestDialog';
 
 interface RequestCourse {
   courseCode?: string;
@@ -73,6 +74,7 @@ const RequestStatusList = () => {
   const [queuePositions, setQueuePositions] = useState<Record<string, number>>({});
   const [selectedRequestItems, setSelectedRequestItems] = useState<RequestItem[] | null>(null);
   const [selectedRequestItemsLoading, setSelectedRequestItemsLoading] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const fetchRequests = useCallback(async () => {
     if (!user) return;
@@ -804,6 +806,14 @@ const RequestStatusList = () => {
 
               {selectedRequest.status === 'pending' && (
                 <div className="border-t pt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Button
+                      className="w-full"
+                      onClick={() => setShowEditDialog(true)}
+                    >
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Edit Request
+                    </Button>
                   <Button
                     variant="destructive"
                     className="w-full"
@@ -812,12 +822,22 @@ const RequestStatusList = () => {
                     <Trash2 className="w-4 h-4 mr-2" />
                     Cancel Request
                   </Button>
+                  </div>
                 </div>
               )}
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {selectedRequest && (
+        <EditRequestDialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          request={selectedRequest}
+          onSuccess={fetchRequests}
+        />
+      )}
 
       <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
         <AlertDialogContent>
