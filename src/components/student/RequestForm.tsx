@@ -10,6 +10,7 @@ import AddRequestDialog from './dialogs/AddRequestDialog';
 import ChangeRequestDialog from './dialogs/ChangeRequestDialog';
 import DropRequestDialog from './dialogs/DropRequestDialog';
 import AddRequestExceptionDialog from './dialogs/AddRequestExceptionDialog';
+import MultiRequestDialog from './dialogs/MultiRequestDialog';
 
 interface RequestFormProps {
   onSubmitSuccess: () => void;
@@ -26,7 +27,7 @@ export interface FormData {
   email: string;
   phoneNumber: string;
   facebook: string;
-  requestType: 'add' | 'add_with_exception' | 'change' | 'drop' | '';
+  requestType: 'add' | 'add_with_exception' | 'change' | 'drop' | 'multi' | '';
   reason: string;
 }
 
@@ -100,6 +101,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
   const [showAddExceptionDialog, setShowAddExceptionDialog] = useState(false);
   const [showChangeDialog, setShowChangeDialog] = useState(false);
   const [showDropDialog, setShowDropDialog] = useState(false);
+  const [showMultiDialog, setShowMultiDialog] = useState(false);
 
   const programs = formData.college ? getProgramsByCollege(formData.college) : [];
 
@@ -117,7 +119,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
   };
 
   const isFormValid = () => {
-    return (
+    const baseValid =
       formData.idNumber &&
       formData.college &&
       formData.program &&
@@ -125,9 +127,10 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
       formData.firstName &&
       formData.email &&
       formData.phoneNumber &&
-      formData.requestType &&
-      formData.reason
-    );
+      formData.requestType;
+    if (!baseValid) return false;
+    if (formData.requestType === 'multi') return true;
+    return !!formData.reason;
   };
 
   const handleProceed = () => {
@@ -146,6 +149,9 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
       case 'drop':
         setShowDropDialog(true);
         break;
+      case 'multi':
+        setShowMultiDialog(true);
+        break;
     }
   };
 
@@ -154,6 +160,7 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
     setShowAddExceptionDialog(false);
     setShowChangeDialog(false);
     setShowDropDialog(false);
+    setShowMultiDialog(false);
   };
 
   const handleSuccess = () => {
@@ -333,6 +340,14 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
                   </SelectItem>
                   <SelectItem value="change">Change Course</SelectItem>
                   <SelectItem value="drop">Drop Course</SelectItem>
+                  <SelectItem value="multi">
+                    <div className="flex flex-col">
+                      <span>Combined Request (Multiple Types)</span>
+                      <span className="text-xs text-muted-foreground">
+                        Submit add, drop, and change together.
+                      </span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -342,10 +357,10 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
               <Select 
                 value={formData.reason} 
                 onValueChange={(v) => handleInputChange('reason', v)}
-                disabled={!formData.requestType}
+                disabled={!formData.requestType || formData.requestType === 'multi'}
               >
                 <SelectTrigger className="input-focus">
-                  <SelectValue placeholder={formData.requestType ? 'Select reason' : 'Select request type first'} />
+                  <SelectValue placeholder={formData.requestType && formData.requestType !== 'multi' ? 'Select reason' : (formData.requestType === 'multi' ? 'Reasons will be selected per type' : 'Select request type first')} />
                 </SelectTrigger>
                 <SelectContent className={selectContentClassName}>
                   {getReasonsForType(formData.requestType).map((reason) => (
@@ -394,6 +409,12 @@ const RequestForm = ({ onSubmitSuccess }: RequestFormProps) => {
          formData={formData}
          onSuccess={handleSuccess}
        />
+      <MultiRequestDialog
+        open={showMultiDialog}
+        onClose={handleDialogClose}
+        formData={formData}
+        onSuccess={handleSuccess}
+      />
     </>
   );
 };
